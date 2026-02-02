@@ -1,0 +1,6 @@
+@BlueBerryFinance_HostAddress = http://localhost:5109
+
+GET {{BlueBerryFinance_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

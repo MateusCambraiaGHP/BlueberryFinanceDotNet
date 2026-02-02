@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="BlueBerryFinance.Commom/BlueBerryFinance.Commom.csproj" />
+  <Project Path="BlueBerryFinance/BlueBerryFinance.API.csproj" />
+</Solution>
