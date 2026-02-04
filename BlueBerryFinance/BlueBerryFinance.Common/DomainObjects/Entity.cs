@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace BlueBerryFinance.Commom.Entities
+namespace BlueBerryFinance.Common.DomainObjects
 {
     public abstract class Entity
     {

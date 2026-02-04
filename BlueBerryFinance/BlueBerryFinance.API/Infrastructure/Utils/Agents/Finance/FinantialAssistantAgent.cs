@@ -3,7 +3,7 @@ using BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Interfaces;
 using BlueBerryFinance.API.Infrastructure.Utils.Factories.Interfaces;
 using BlueBerryFinance.API.Infrastructure.Utils.Helpers.Interfaces;
 
-namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.GeneralPurpose
+namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance
 {
     public class FinantialAssistantAgent : AgentBase<FinancialAnalysisResponse>, IFinantialAssistantAgent
     {

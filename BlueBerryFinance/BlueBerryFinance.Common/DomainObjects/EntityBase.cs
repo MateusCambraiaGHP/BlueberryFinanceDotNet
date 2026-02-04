@@ -1,4 +1,4 @@
-﻿namespace BlueBerryFinance.Commom.Entities
+﻿namespace BlueBerryFinance.Common.DomainObjects
 {
     public abstract class EntityBase : Entity
     {
