@@ -16,30 +16,15 @@ namespace BlueBerryFinance.API.Application.Handlers
         }
 
         public async Task<FinancialAnalysisResponse> HandleAsync(
-            FinancialAnalysisRequest request,
-            CancellationToken cancellationToken = default)
+              FinancialAnalysisRequest request,
+              CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(request.Prompt))
                 return new FinancialAnalysisResponse();
 
-            var response = await _agent.AskAsync(request.Prompt, response =>
-            {
-                var content = response.ToString() ?? string.Empty;
+            var response = await _agent.AskAsync(request.Prompt);
 
-                try
-                {
-                    return JsonSerializer.Deserialize<FinancialAnalysisResponse>(content, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    }) ?? new FinancialAnalysisResponse { Answer = content };
-                }
-                catch
-                {
-                    return new FinancialAnalysisResponse { Answer = content };
-                }
-            });
-
-            return response;
+            return response ?? new FinancialAnalysisResponse();
         }
     }
 }
