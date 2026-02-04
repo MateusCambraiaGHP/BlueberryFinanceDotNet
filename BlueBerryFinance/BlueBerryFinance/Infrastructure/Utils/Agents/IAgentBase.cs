@@ -5,6 +5,6 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents
 {
     public interface IAgentBase<T>
     {
-        Task<T?> AskAsync(string prompt, Func<AgentResponse, T> parser, AIProvider provider = AIProvider.OpenAI);
+        Task<T?> AskAsync(string prompt, AIProvider provider = AIProvider.OpenAI);
     }
 }
