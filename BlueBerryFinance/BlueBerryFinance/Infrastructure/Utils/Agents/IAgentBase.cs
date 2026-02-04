@@ -1,4 +1,4 @@
-﻿using BlueBerryFinance.API.Infrastructure.Utils.Agents.Enums;
+﻿using BlueBerryFinance.API.Infrastructure.Utils.Enums;
 using Microsoft.Agents.AI;
 
 namespace BlueBerryFinance.API.Infrastructure.Utils.Agents
