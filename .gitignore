@@ -419,3 +419,4 @@ FodyWeavers.xsd
 
 # Development settings with secrets (all projects)
 **/appsettings.Development.json
+/BlueBerryFinance/BlueBerryFinance/appsettings.Development.json
