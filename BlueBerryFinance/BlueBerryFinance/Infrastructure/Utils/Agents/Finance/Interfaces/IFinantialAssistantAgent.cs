@@ -1,4 +1,4 @@
-﻿using BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Responses;
+﻿using BlueBerryFinance.API.Application.Responses;
 
 namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Interfaces
 {

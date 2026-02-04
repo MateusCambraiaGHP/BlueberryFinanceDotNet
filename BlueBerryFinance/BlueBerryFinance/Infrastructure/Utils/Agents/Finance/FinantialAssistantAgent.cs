@@ -1,7 +1,7 @@
-﻿using BlueBerryFinance.API.Infrastructure.Utils.Agents.Factories.Interfaces;
+﻿using BlueBerryFinance.API.Application.Responses;
 using BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Interfaces;
-using BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Responses;
-using BlueBerryFinance.API.Infrastructure.Utils.Agents.Helpers.Interfaces;
+using BlueBerryFinance.API.Infrastructure.Utils.Factories.Interfaces;
+using BlueBerryFinance.API.Infrastructure.Utils.Helpers.Interfaces;
 
 namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.GeneralPurpose
 {
