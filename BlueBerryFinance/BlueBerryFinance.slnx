@@ -1,5 +1,5 @@
 <Solution>
+  <Project Path="BlueBerryFinance.API/BlueBerryFinance.API.csproj" />
   <Project Path="BlueBerryFinance.Commom/BlueBerryFinance.Commom.csproj" />
   <Project Path="BlueberryFinance.Web/BlueberryFinance.Web.csproj" Id="ba6117cb-ff9c-42e3-b4e3-d2d5abb18850" />
-  <Project Path="BlueBerryFinance/BlueBerryFinance.API.csproj" />
 </Solution>
