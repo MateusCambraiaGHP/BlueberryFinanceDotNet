@@ -417,5 +417,5 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
-# Development settings with secrets
-appsettings.Development.json
+# Development settings with secrets (all projects)
+**/appsettings.Development.json
