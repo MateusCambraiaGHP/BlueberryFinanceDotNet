@@ -7,6 +7,9 @@ namespace BlueBerryFinance.API.Controllers
     [Route("bank-account/")]
     public class BankAccountController : BaseController
     {
+        public BankAccountController() { }
+
+        [HttpGet]
         public ActionResult<List<BankAccount>> Get()
         {
             return new List<BankAccount>();

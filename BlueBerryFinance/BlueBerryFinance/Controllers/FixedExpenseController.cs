@@ -6,6 +6,9 @@ namespace BlueBerryFinance.API.Controllers
     [Route("fixed-expense/")]
     public class FixedExpenseController : Controller
     {
+        public FixedExpenseController() { }
+
+        [HttpGet]
         public ActionResult<List<FixedExpense>> Get()
         {
             return new List<FixedExpense>();
