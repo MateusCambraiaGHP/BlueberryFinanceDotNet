@@ -1,5 +1,5 @@
 ﻿using BlueBerryFinance.API.Data.Entities.enums;
-using BlueBerryFinance.Commom.Entities;
+using BlueBerryFinance.Common.DomainObjects;
 
 namespace BlueBerryFinance.API.Data.Entities
 {

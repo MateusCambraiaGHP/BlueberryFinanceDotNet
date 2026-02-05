@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BlueBerryFinance.Commom\BlueBerryFinance.Commom.csproj" />
+    <ProjectReference Include="..\BlueBerryFinance.Common\BlueBerryFinance.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
