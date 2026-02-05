@@ -1,0 +1,67 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+
+<MudLayout>
+  <MudAppBar Elevation="1">
+    <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                   Color="Color.Inherit"
+                   Edge="Edge.Start"
+                   OnClick="ToggleDrawer" />
+    <MudText Typo="Typo.h6">Blueberry Finance</MudText>
+    <MudSpacer />
+    <MudMenu Icon="@Icons.Material.Filled.AccountCircle"
+             Color="Color.Inherit"
+             AnchorOrigin="Origin.BottomRight"
+             TransformOrigin="Origin.TopRight">
+      <MudMenuItem>
+        <MudText Typo="Typo.body2" Class="px-2">
+          <strong>@currentUser</strong>
+        </MudText>
+      </MudMenuItem>
+      <MudDivider />
+      <MudMenuItem Icon="@Icons.Material.Filled.AccountCircle">Profile</MudMenuItem>
+      <MudMenuItem Icon="@Icons.Material.Filled.Settings">Settings</MudMenuItem>
+      <MudDivider />
+      <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="Logout">Logout</MudMenuItem>
+    </MudMenu>
+  </MudAppBar>
+
+  <MudDrawer Open="_drawerOpen"
+             OpenChanged="DrawerOpenChanged"
+             Elevation="2"
+             Variant="@DrawerVariant.Responsive"
+             Breakpoint="Breakpoint.Md"
+             ClipMode="DrawerClipMode.Always">
+    <NavMenu />
+  </MudDrawer>
+
+  <MudMainContent>
+    <MudContainer MaxWidth="MaxWidth.Large" Class="my-4">
+      @Body
+    </MudContainer>
+  </MudMainContent>
+</MudLayout>
+
+@code {
+  private bool _drawerOpen = true;
+  private string currentUser = "John Doe";
+
+  private void ToggleDrawer()
+  {
+    _drawerOpen = !_drawerOpen;
+  }
+
+  private void DrawerOpenChanged(bool value)
+  {
+    _drawerOpen = value;
+  }
+
+  private void Logout()
+  {
+    // Add your logout logic here
+  }
+}

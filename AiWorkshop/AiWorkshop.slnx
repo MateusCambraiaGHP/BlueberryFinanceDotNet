@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="AiWorkshop.API/AiWorkshop.API.csproj" />
+  <Project Path="AiWorkshop.Common/AiWorkshop.Common.csproj" />
+  <Project Path="AiWorkshop.Web/AiWorkshop.Web.csproj" />
+</Solution>
