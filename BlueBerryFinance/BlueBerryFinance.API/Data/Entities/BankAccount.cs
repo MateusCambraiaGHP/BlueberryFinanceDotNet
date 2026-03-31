@@ -1,14 +1,19 @@
-﻿using BlueBerryFinance.API.Data.Entities.enums;
+using BlueBerryFinance.API.Data.Entities.Enums;
 using BlueBerryFinance.Common.DomainObjects;
 
 namespace BlueBerryFinance.API.Data.Entities
 {
     public class BankAccount : EntityBase
     {
-        public int CurrencyId { get; set; }
+        public Guid UserId { get; set; }
+        public Guid CurrencyId { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string Country { get; set; } = string.Empty;
-        public Currency Currency { get; set; }
+        public Bank Bank { get; set; }
+        public Country Country { get; set; }
+        public decimal Balance { get; set; }
+
+        public User User { get; set; } = null!;
+        public Currency Currency { get; set; } = null!;
 
         public BankAccount() { }
     }

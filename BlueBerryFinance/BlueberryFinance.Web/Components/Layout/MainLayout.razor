@@ -1,67 +1,79 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
 
-<MudThemeProvider />
+<MudThemeProvider Theme="_theme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudPopoverProvider />
 
 <MudLayout>
-  <MudAppBar Elevation="1">
-    <MudIconButton Icon="@Icons.Material.Filled.Menu"
-                   Color="Color.Inherit"
-                   Edge="Edge.Start"
-                   OnClick="ToggleDrawer" />
-    <MudText Typo="Typo.h6">Blueberry Finance</MudText>
-    <MudSpacer />
-    <MudMenu Icon="@Icons.Material.Filled.AccountCircle"
-             Color="Color.Inherit"
-             AnchorOrigin="Origin.BottomRight"
-             TransformOrigin="Origin.TopRight">
-      <MudMenuItem>
-        <MudText Typo="Typo.body2" Class="px-2">
-          <strong>@currentUser</strong>
+    <MudAppBar Elevation="0" Dense="true"
+               Style="background:#0f1b2d; border-bottom:1px solid rgba(255,255,255,0.08)">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                       OnClick="ToggleDrawer" Style="color:#c8d3e0" />
+        <MudText Typo="Typo.h6" Class="ml-2" Style="color:white; font-weight:600; letter-spacing:.5px">
+            Blueberry Finance
         </MudText>
-      </MudMenuItem>
-      <MudDivider />
-      <MudMenuItem Icon="@Icons.Material.Filled.AccountCircle">Profile</MudMenuItem>
-      <MudMenuItem Icon="@Icons.Material.Filled.Settings">Settings</MudMenuItem>
-      <MudDivider />
-      <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="Logout">Logout</MudMenuItem>
-    </MudMenu>
-  </MudAppBar>
+        <MudSpacer />
+        <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+            <ActivatorContent>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="cursor-pointer px-2">
+                    <MudAvatar Style="background:#4f8ef7; width:30px; height:30px; font-size:.8rem">
+                        @(_currentUser.Length > 0 ? _currentUser[0].ToString().ToUpper() : "?")
+                    </MudAvatar>
+                    <MudText Style="color:#c8d3e0; font-size:.875rem">@_currentUser</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowDropDown" Style="color:#c8d3e0" Size="Size.Small" />
+                </MudStack>
+            </ActivatorContent>
+            <ChildContent>
+                <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="Logout">Sign out</MudMenuItem>
+            </ChildContent>
+        </MudMenu>
+    </MudAppBar>
 
-  <MudDrawer Open="_drawerOpen"
-             OpenChanged="DrawerOpenChanged"
-             Elevation="2"
-             Variant="@DrawerVariant.Responsive"
-             Breakpoint="Breakpoint.Md"
-             ClipMode="DrawerClipMode.Always">
-    <NavMenu />
-  </MudDrawer>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="0" Variant="DrawerVariant.Responsive"
+               Breakpoint="Breakpoint.Md" ClipMode="DrawerClipMode.Always"
+               Style="background:#0f1b2d; border-right:1px solid rgba(255,255,255,0.08)">
+        <NavMenu />
+    </MudDrawer>
 
-  <MudMainContent>
-    <MudContainer MaxWidth="MaxWidth.Large" Class="my-4">
-      @Body
-    </MudContainer>
-  </MudMainContent>
+    <MudMainContent Style="background:#f4f6f9; min-height:100vh">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
+            @Body
+        </MudContainer>
+    </MudMainContent>
 </MudLayout>
 
 @code {
-  private bool _drawerOpen = true;
-  private string currentUser = "John Doe";
+    bool _drawerOpen = true;
+    string _currentUser = string.Empty;
 
-  private void ToggleDrawer()
-  {
-    _drawerOpen = !_drawerOpen;
-  }
+    readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#4f8ef7",
+            PrimaryDarken = "#2d6de6",
+            Background = "#f4f6f9",
+            Surface = "#ffffff",
+            AppbarBackground = "#0f1b2d",
+            DrawerBackground = "#0f1b2d",
+            DrawerText = "#c8d3e0",
+            DrawerIcon = "#c8d3e0",
+            Success = "#38a169",
+            Error = "#e53e3e",
+            Warning = "#d69e2e",
+            Info = "#3182ce",
+        }
+    };
 
-  private void DrawerOpenChanged(bool value)
-  {
-    _drawerOpen = value;
-  }
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        _currentUser = state.User.Identity?.Name ?? string.Empty;
+    }
 
-  private void Logout()
-  {
-    // Add your logout logic here
-  }
+    void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+    void Logout() => Nav.NavigateTo("/account/logout", forceLoad: true);
 }

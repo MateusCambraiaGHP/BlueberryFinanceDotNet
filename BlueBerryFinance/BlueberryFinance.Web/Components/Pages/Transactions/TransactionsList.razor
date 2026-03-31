@@ -1,0 +1,387 @@
+@page "/transactions"
+@inject TransactionClient TransactionClient
+@inject BankAccountClient AccountClient
+@inject CategoryClient CategoryClient
+@inject StoreClient StoreClient
+@inject CurrencyClient CurrencyClient
+@inject NavigationManager Nav
+@inject IDialogService DialogService
+
+<PageTitle>Transactions — Blueberry Finance</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-6">
+    <MudText Typo="Typo.h5" Style="font-weight:700;color:#0f1b2d">Transactions</MudText>
+    <MudStack Row="true" Spacing="2">
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile"
+                   OnClick='@(() => Nav.NavigateTo("/transactions/import"))' Style="border-radius:8px">
+            Import CSV
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="@(() => _showForm = !_showForm)" Style="border-radius:8px">
+            Register Transaction
+        </MudButton>
+    </MudStack>
+</MudStack>
+
+@if (_formError is not null)
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="@(() => _formError = null)">
+        @_formError
+    </MudAlert>
+}
+
+@if (_showForm)
+{
+    <MudCard Elevation="1" Class="mb-6 pa-5" Style="border-radius:12px;border-left:4px solid #4f8ef7">
+        <MudText Typo="Typo.subtitle1" Style="font-weight:600;color:#0f1b2d;margin-bottom:16px">@(_editingId.HasValue ? "Edit Transaction" : "Register Transaction")</MudText>
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudSelect @bind-Value="_form.TransactionType" Label="Type" Variant="Variant.Outlined" Required="true">
+                    <MudSelectItem Value="1">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudIcon Icon="@Icons.Material.Filled.ArrowUpward" Style="color:#38a169;font-size:18px" />
+                            <span>Income</span>
+                        </MudStack>
+                    </MudSelectItem>
+                    <MudSelectItem Value="2">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudIcon Icon="@Icons.Material.Filled.ArrowDownward" Style="color:#e53e3e;font-size:18px" />
+                            <span>Expense</span>
+                        </MudStack>
+                    </MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect @bind-Value="_form.BankAccountId" Label="Account" Variant="Variant.Outlined" Required="true">
+                    @foreach (var a in _accounts)
+                    {
+                        <MudSelectItem Value="@a.Id">@a.Name (@a.CurrencySymbol)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect @bind-Value="_form.CategoryId" Label="Category" Variant="Variant.Outlined" Required="true">
+                    @foreach (var c in _categories.Where(c => _form.TransactionType == 1 ? c.Type == "Income" : c.Type == "Expense"))
+                    {
+                        <MudSelectItem Value="@c.Id">@c.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect @bind-Value="_form.StoreId" Label="Store / Origin" Variant="Variant.Outlined" Required="true">
+                    @foreach (var s in _stores)
+                    {
+                        <MudSelectItem Value="@s.Id">@s.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudSelect @bind-Value="_form.CurrencyId" Label="Currency" Variant="Variant.Outlined" Required="true">
+                    @foreach (var c in _currencies)
+                    {
+                        <MudSelectItem Value="@c.Id">@c.Symbol — @c.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudNumericField @bind-Value="_form.Amount" Label="Amount" Variant="Variant.Outlined"
+                                 Format="N2" Min="0.01m" Required="true" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudSelect @bind-Value="_form.OriginType" Label="Origin Type" Variant="Variant.Outlined">
+                    <MudSelectItem Value="1">Person</MudSelectItem>
+                    <MudSelectItem Value="2">Company</MudSelectItem>
+                    <MudSelectItem Value="3">Store</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="8">
+                <MudTextField @bind-Value="_form.Description" Label="Description" Variant="Variant.Outlined"
+                              Placeholder="e.g. Weekly grocery shopping" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudDatePicker @bind-Date="_form.TransactionDate" Label="Date" Variant="Variant.Outlined"
+                               DateFormat="dd/MM/yyyy" />
+            </MudItem>
+        </MudGrid>
+        <MudStack Row="true" Class="mt-4" Spacing="2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitFormAsync"
+                       Disabled="_saving" Style="border-radius:8px">
+                @(_saving ? "Saving…" : _editingId.HasValue ? "Update Transaction" : "Save Transaction")
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Default"
+                       OnClick="@(() => { _showForm = false; ResetForm(); StateHasChanged(); })">
+                Cancel
+            </MudButton>
+        </MudStack>
+    </MudCard>
+}
+
+<MudCard Elevation="1" Style="border-radius:12px;overflow:hidden">
+    <MudTable ServerData="LoadDataAsync" @ref="_table" Hover="true" Dense="true"
+              Breakpoint="Breakpoint.Sm" RowsPerPage="20" Loading="_loading"
+              LoadingProgressColor="Color.Primary">
+        <ToolBarContent>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default"
+                           OnClick="RefreshAsync" aria-label="Refresh" />
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Date</MudTh>
+            <MudTh>Description</MudTh>
+            <MudTh>Category</MudTh>
+            <MudTh>Store</MudTh>
+            <MudTh>Account</MudTh>
+            <MudTh>Type</MudTh>
+            <MudTh Style="text-align:right">Amount</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Date">
+                <MudText Typo="Typo.body2" Style="color:#374151;white-space:nowrap">
+                    @context.TransactionDate.ToString("dd MMM yyyy")
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Description">
+                <MudText Typo="Typo.body2">@context.Description</MudText>
+            </MudTd>
+            <MudTd DataLabel="Category">
+                <MudChip T="string" Size="Size.Small"
+                         Style="@($"background:{context.CategoryColor}22;color:{context.CategoryColor};font-size:.75rem;height:22px")">
+                    @context.CategoryName
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Store">
+                <MudText Typo="Typo.body2" Style="color:#374151">@context.StoreName</MudText>
+            </MudTd>
+            <MudTd DataLabel="Account">
+                <MudText Typo="Typo.body2" Style="color:#6b7280">@context.BankAccountName</MudText>
+            </MudTd>
+            <MudTd DataLabel="Type">
+                <MudChip T="string" Size="Size.Small"
+                         Style="@(context.TransactionType == "Income"
+                             ? "background:rgba(56,161,105,0.12);color:#38a169;font-size:.75rem;height:22px"
+                             : "background:rgba(229,62,62,0.12);color:#e53e3e;font-size:.75rem;height:22px")">
+                    @context.TransactionType
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Amount" Style="text-align:right">
+                <MudText Typo="Typo.body2"
+                         Style="@(context.TransactionType == "Income" ? "color:#38a169;font-weight:600" : "color:#e53e3e;font-weight:600")">
+                    @(context.TransactionType == "Income" ? "+" : "-")@context.CurrencySymbol@context.Amount.ToString("N2")
+                </MudText>
+            </MudTd>
+            <MudTd Style="white-space:nowrap">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Title="Edit"
+                               OnClick="@(() => StartEdit(context))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Title="Delete"
+                               Disabled="@(_deletingId == context.Id)"
+                               OnClick="@(() => ConfirmDeleteAsync(context.Id))" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Class="pa-6" Style="color:#9ca3af;text-align:center">No transactions found.</MudText>
+        </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new[] { 10, 20, 50 }" />
+        </PagerContent>
+    </MudTable>
+</MudCard>
+
+@code {
+    MudTable<TransactionViewModel> _table = null!;
+    bool _loading;
+    bool _showForm;
+    bool _saving;
+    string? _formError;
+    Guid? _editingId;
+    Guid? _deletingId;
+
+    IReadOnlyList<BankAccountViewModel> _accounts = [];
+    IReadOnlyList<CategoryViewModel> _categories = [];
+    IReadOnlyList<StoreViewModel> _stores = [];
+    IReadOnlyList<CurrencyViewModel> _currencies = [];
+
+    TransactionForm _form = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var accountsTask = AccountClient.GetAsync();
+            var catsTask = CategoryClient.GetAsync();
+            var storesTask = StoreClient.GetAsync();
+            var cursTask = CurrencyClient.GetAsync();
+            await Task.WhenAll(accountsTask, catsTask, storesTask, cursTask);
+
+            _accounts = await accountsTask ?? [];
+            _categories = await catsTask ?? [];
+            _stores = await storesTask ?? [];
+            _currencies = await cursTask ?? [];
+
+            SetFormDefaults();
+        }
+        catch
+        {
+            // dropdowns will be empty; user can still view the table
+        }
+    }
+
+    private void SetFormDefaults()
+    {
+        if (_accounts.Count > 0) _form.BankAccountId = _accounts[0].Id;
+        if (_currencies.Count > 0) _form.CurrencyId = _currencies[0].Id;
+        if (_stores.Count > 0) _form.StoreId = _stores[0].Id;
+        var expenseCategories = _categories.Where(c => c.Type == "Expense").ToList();
+        if (expenseCategories.Count > 0) _form.CategoryId = expenseCategories[0].Id;
+    }
+
+    private async Task<TableData<TransactionViewModel>> LoadDataAsync(TableState state, CancellationToken ct)
+    {
+        _loading = true;
+        try
+        {
+            var page = state.Page + 1;
+            var result = await TransactionClient.GetAsync(page, state.PageSize, ct);
+            return new TableData<TransactionViewModel>
+            {
+                Items = result?.Items ?? [],
+                TotalItems = result?.TotalCount ?? 0
+            };
+        }
+        catch
+        {
+            return new TableData<TransactionViewModel> { Items = [], TotalItems = 0 };
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SubmitFormAsync()
+    {
+        if (_form.CategoryId == Guid.Empty || _form.StoreId == Guid.Empty || _form.Amount <= 0)
+        {
+            _formError = "Please fill in all required fields.";
+            return;
+        }
+
+        _saving = true;
+        _formError = null;
+        try
+        {
+            if (_editingId.HasValue)
+            {
+                await TransactionClient.UpdateAsync(_editingId.Value, new
+                {
+                    storeId = _form.StoreId,
+                    categoryId = _form.CategoryId,
+                    originType = _form.OriginType,
+                    transactionType = _form.TransactionType,
+                    amount = _form.Amount,
+                    description = _form.Description,
+                    transactionDate = _form.TransactionDate?.ToUniversalTime() ?? DateTime.UtcNow
+                });
+            }
+            else
+            {
+                if (_form.BankAccountId == Guid.Empty || _form.CurrencyId == Guid.Empty)
+                {
+                    _formError = "Please fill in all required fields.";
+                    return;
+                }
+
+                await TransactionClient.CreateAsync(new
+                {
+                    bankAccountId = _form.BankAccountId,
+                    storeId = _form.StoreId,
+                    categoryId = _form.CategoryId,
+                    currencyId = _form.CurrencyId,
+                    originType = _form.OriginType,
+                    transactionType = _form.TransactionType,
+                    source = 1,
+                    amount = _form.Amount,
+                    description = _form.Description,
+                    transactionDate = _form.TransactionDate?.ToUniversalTime() ?? DateTime.UtcNow
+                });
+            }
+
+            _showForm = false;
+            ResetForm();
+            await _table.ReloadServerData();
+        }
+        catch (Exception ex)
+        {
+            _formError = $"Failed to save transaction: {ex.Message}";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void StartEdit(TransactionViewModel t)
+    {
+        _editingId = t.Id;
+        _form = new TransactionForm
+        {
+            TransactionType = t.TransactionType == "Income" ? 1 : 2,
+            BankAccountId = t.BankAccountId,
+            CategoryId = t.CategoryId,
+            StoreId = t.StoreId,
+            CurrencyId = _currencies.FirstOrDefault()?.Id ?? Guid.Empty,
+            OriginType = 3,
+            Amount = t.Amount,
+            Description = t.Description,
+            TransactionDate = t.TransactionDate.ToLocalTime()
+        };
+        _showForm = true;
+    }
+
+    private async Task ConfirmDeleteAsync(Guid id)
+    {
+        var confirmed = await DialogService.ShowMessageBox(
+            "Delete Transaction",
+            "Are you sure you want to delete this transaction? This cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (confirmed != true) return;
+
+        _deletingId = id;
+        try
+        {
+            await TransactionClient.DeleteAsync(id);
+            await _table.ReloadServerData();
+        }
+        catch (Exception ex)
+        {
+            _formError = $"Failed to delete transaction: {ex.Message}";
+        }
+        finally
+        {
+            _deletingId = null;
+        }
+    }
+
+    private void ResetForm()
+    {
+        _editingId = null;
+        _form = new TransactionForm();
+        SetFormDefaults();
+    }
+
+    private Task RefreshAsync() => _table.ReloadServerData();
+
+    class TransactionForm
+    {
+        public int TransactionType { get; set; } = 2; // default: Expense
+        public Guid BankAccountId { get; set; }
+        public Guid CategoryId { get; set; }
+        public Guid StoreId { get; set; }
+        public Guid CurrencyId { get; set; }
+        public int OriginType { get; set; } = 3; // default: Store
+        public decimal Amount { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public DateTime? TransactionDate { get; set; } = DateTime.Today;
+    }
+}

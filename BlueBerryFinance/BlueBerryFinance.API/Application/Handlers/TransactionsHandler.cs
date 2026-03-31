@@ -1,30 +1,27 @@
-﻿using BlueBerryFinance.API.Application.Handlers.Interfaces;
+using BlueBerryFinance.API.Application.Handlers.Interfaces;
 using BlueBerryFinance.API.Application.Requests;
 using BlueBerryFinance.API.Application.Responses;
-using BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Interfaces;
-using System.Text.Json;
+using BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools.Interfaces;
 
 namespace BlueBerryFinance.API.Application.Handlers
 {
     public class TransactionsHandler : ITransactionsHandler
     {
-        private readonly IFinantialAssistantAgent _agent;
+        private readonly IFinancialAnalysisTool _analysisTool;
 
-        public TransactionsHandler(IFinantialAssistantAgent agent)
+        public TransactionsHandler(IFinancialAnalysisTool analysisTool)
         {
-            _agent = agent;
+            _analysisTool = analysisTool;
         }
 
         public async Task<FinancialAnalysisResponse> HandleAsync(
-              FinancialAnalysisRequest request,
-              CancellationToken cancellationToken = default)
+            FinancialAnalysisRequest request,
+            CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(request.Prompt))
                 return new FinancialAnalysisResponse();
 
-            var response = await _agent.AskAsync(request.Prompt);
-
-            return response ?? new FinancialAnalysisResponse();
+            return await _analysisTool.AnalyzeAsync(request.Prompt, cancellationToken);
         }
     }
 }

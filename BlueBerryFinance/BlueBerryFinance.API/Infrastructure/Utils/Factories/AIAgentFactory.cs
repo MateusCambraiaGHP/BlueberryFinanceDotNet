@@ -1,4 +1,3 @@
-﻿using BlueBerryFinance.API.Infrastructure.Utils.Enums;
 using BlueBerryFinance.API.Infrastructure.Utils.Factories.Interfaces;
 using BlueBerryFinance.API.Infrastructure.Utils.Models;
 using Microsoft.Agents.AI;
@@ -19,26 +18,26 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Factories
             _options = options.Value;
         }
 
-        public AIAgent Create(AIProvider provider = AIProvider.OpenAI, ChatOptions? chatOptions = null)
+        public AIAgent Create(ChatOptions? chatOptions = null)
         {
-            return provider switch
-            {
-                AIProvider.OpenAI => CreateOpenAIAgent(chatOptions),
-                _ => throw new InvalidOperationException($"Unsupported AI provider: {provider}")
-            };
-        }
-
-        private AIAgent CreateOpenAIAgent(ChatOptions? chatOptions)
-        {
-            var client = new OpenAIClient(new ApiKeyCredential(_options.ApiKey))
-                .GetChatClient(OpenAIModels.Gpt41)
-                .AsAIAgent(new ChatClientAgentOptions()
+            return BuildOpenAIClient()
+                .GetChatClient(_options.Model)
+                .AsAIAgent(new ChatClientAgentOptions
                 {
-                    Name = "HelpfulAssistant",
+                    Name = "BlueberryFinancialAssistant",
                     ChatOptions = chatOptions
-                }); ;
-
-            return client;
+                });
         }
+
+        public IChatClient CreateChatClient()
+        {
+            return BuildOpenAIClient()
+                .GetChatClient(_options.Model)
+                .AsIChatClient();
+        }
+
+        private OpenAIClient BuildOpenAIClient() =>
+            new(new ApiKeyCredential(_options.ApiKey),
+                new OpenAIClientOptions { Endpoint = new Uri(_options.BaseUrl) });
     }
 }

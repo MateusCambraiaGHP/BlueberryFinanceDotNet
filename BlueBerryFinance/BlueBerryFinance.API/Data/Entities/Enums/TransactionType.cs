@@ -1,9 +1,8 @@
-﻿namespace BlueBerryFinance.API.Data.Entities.enums
+namespace BlueBerryFinance.API.Data.Entities.Enums
 {
     public enum TransactionType
     {
-        None = 0,
-        Expense = 1,
-        Income = 2
+        Income = 1,
+        Expense = 2
     }
 }

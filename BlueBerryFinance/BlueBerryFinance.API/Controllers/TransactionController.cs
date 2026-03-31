@@ -1,39 +1,101 @@
-﻿using BlueBerryFinance.API.Application.Handlers.Interfaces;
-using BlueBerryFinance.API.Application.Requests;
+using BlueBerryFinance.API.Application.Handlers.Interfaces;
+using BlueBerryFinance.API.Application.Requests.Transaction;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Transactions;
 
 namespace BlueBerryFinance.API.Controllers
 {
-    [Route("transaction/")]
-    public class TransactionController : Controller
+    [Route("api/v1.0/transaction")]
+    [Authorize]
+    public class TransactionController : BaseController
     {
-        private readonly ITransactionsHandler _handler;
+        private readonly ITransactionHandler _handler;
+        private readonly ILogger<TransactionController> _logger;
 
-        public TransactionController(ITransactionsHandler handler)
+        public TransactionController(ITransactionHandler handler, ILogger<TransactionController> logger)
         {
             _handler = handler;
+            _logger = logger;
         }
 
         [HttpGet]
-        public ActionResult<List<Transaction>> Get()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> List([FromQuery] ListTransactionsRequest request, CancellationToken ct)
         {
-            return new List<Transaction>();
+            try
+            {
+                var result = await _handler.ListAsync(request, CurrentUserId, ct);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex, _logger);
+            }
         }
 
-        [HttpPost("analyze")]
+        [HttpGet("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Analyze(
-        [FromBody] FinancialAnalysisRequest request,
-        CancellationToken cancellationToken)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
         {
-            var result = await _handler.HandleAsync(request, cancellationToken);
+            try
+            {
+                var result = await _handler.GetByIdAsync(id, CurrentUserId, ct);
+                return result is null ? NotFound() : Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex, _logger);
+            }
+        }
 
-            if (result is null)
-                return BadRequest("Failed to process the request");
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Register([FromBody] RegisterTransactionRequest request, CancellationToken ct)
+        {
+            try
+            {
+                var result = await _handler.RegisterAsync(request, CurrentUserId, ct);
+                return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex, _logger);
+            }
+        }
 
-            return Ok(result);
+        [HttpPut("{id:guid}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTransactionRequest request, CancellationToken ct)
+        {
+            try
+            {
+                request.Id = id;
+                var result = await _handler.UpdateAsync(request, CurrentUserId, ct);
+                return result is null ? NotFound() : Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex, _logger);
+            }
+        }
+
+        [HttpDelete("{id:guid}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+        {
+            try
+            {
+                var deleted = await _handler.DeleteAsync(id, CurrentUserId, ct);
+                return deleted ? NoContent() : NotFound();
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex, _logger);
+            }
         }
     }
 }

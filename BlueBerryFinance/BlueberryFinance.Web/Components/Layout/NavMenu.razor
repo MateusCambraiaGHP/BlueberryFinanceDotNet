@@ -1,14 +1,21 @@
-﻿<MudNavMenu Color="Color.Inherit">
-  <MudText Typo="Typo.h6" Class="px-4 py-4">Blueberry Finance</MudText>
-  <MudDivider />
-
-  <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">
-    Home
-  </MudNavLink>
-  <MudNavLink Href="counter" Icon="@Icons.Material.Filled.Add">
-    Counter
-  </MudNavLink>
-  <MudNavLink Href="weather" Icon="@Icons.Material.Filled.List">
-    Weather
-  </MudNavLink>
+<MudNavMenu Color="Color.Inherit" Class="pa-2 pt-4">
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
+        Dashboard
+    </MudNavLink>
+    <MudNavLink Href="/transactions" Icon="@Icons.Material.Filled.SwapHoriz">
+        Transactions
+    </MudNavLink>
+    <MudNavLink Href="/accounts" Icon="@Icons.Material.Filled.AccountBalance">
+        Accounts
+    </MudNavLink>
+    <MudNavLink Href="/reports" Icon="@Icons.Material.Filled.BarChart">
+        Reports
+    </MudNavLink>
+    <MudNavLink Href="/chat" Icon="@Icons.Material.Filled.Chat">
+        Chat
+    </MudNavLink>
+    <MudDivider Class="my-3" Style="border-color:rgba(255,255,255,0.1)" />
+    <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">
+        Settings
+    </MudNavLink>
 </MudNavMenu>

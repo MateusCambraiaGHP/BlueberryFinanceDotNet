@@ -1,0 +1,47 @@
+@page "/login"
+@layout EmptyLayout
+
+<PageTitle>Sign in — Blueberry Finance</PageTitle>
+
+<div class="login-wrapper">
+    <MudCard Class="login-card" Elevation="6">
+        <MudCardContent Class="pa-8">
+            <div class="text-center mb-6">
+                <MudText Typo="Typo.h5" Style="font-weight:700;color:#0f1b2d">Blueberry Finance</MudText>
+                <MudText Typo="Typo.body2" Class="mt-1" Style="color:#6b7280">Sign in to your account</MudText>
+            </div>
+
+            @if (_showError)
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-4" Dense="true">Invalid email or password.</MudAlert>
+            }
+
+            <form method="post" action="/account/login">
+                <input type="hidden" name="returnUrl" value="@_returnUrl" />
+                <div class="mb-4">
+                    <input type="email" name="email" placeholder="Email address" required
+                           class="login-input" autocomplete="email" />
+                </div>
+                <div class="mb-6">
+                    <input type="password" name="password" placeholder="Password" required
+                           class="login-input" autocomplete="current-password" />
+                </div>
+                <button type="submit" class="login-btn">Sign in</button>
+            </form>
+        </MudCardContent>
+    </MudCard>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")] string? ReturnUrl { get; set; }
+    [SupplyParameterFromQuery(Name = "error")] string? ErrorParam { get; set; }
+
+    string _returnUrl = "/";
+    bool _showError;
+
+    protected override void OnInitialized()
+    {
+        _returnUrl = Uri.UnescapeDataString(ReturnUrl ?? "/");
+        _showError = ErrorParam is not null;
+    }
+}

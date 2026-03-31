@@ -1,6 +1,4 @@
-﻿using BlueBerryFinance.API.Infrastructure.Utils.Enums;
-using BlueBerryFinance.API.Infrastructure.Utils.Factories.Interfaces;
-using Microsoft.Agents.AI;
+﻿using BlueBerryFinance.API.Infrastructure.Utils.Factories.Interfaces;
 using Microsoft.Extensions.AI;
 using System.Text.Json;
 
@@ -15,7 +13,8 @@ public abstract class AgentBase<T> : IAgentBase<T> where T : class, new()
 
     protected AgentBase(
         IAIAgentFactory agentFactory,
-        string instructions)
+        string instructions,
+        IList<AITool>? tools = null)
     {
         _agentFactory = agentFactory;
         _instructions = instructions;
@@ -29,11 +28,14 @@ public abstract class AgentBase<T> : IAgentBase<T> where T : class, new()
                 schemaDescription: $"Structured response for {typeof(T).Name}"),
             Instructions = _instructions
         };
+
+        if (tools?.Count > 0)
+            _chatOptions.Tools = tools;
     }
 
-    public virtual async Task<T?> AskAsync(string prompt, AIProvider provider = AIProvider.OpenAI)
+    public virtual async Task<T?> AskAsync(string prompt)
     {
-        var agent = _agentFactory.Create(provider: provider, chatOptions: _chatOptions);
+        var agent = _agentFactory.Create(chatOptions: _chatOptions);
         var response = await agent.RunAsync(prompt);
 
         if (response is null)

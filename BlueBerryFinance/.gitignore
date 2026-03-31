@@ -1,0 +1,29 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## Secrets (NEVER commit real credentials)
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+
+## Docker env (contains real secrets)
+docker/.env
+
+## Build output
+publish/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Rider / JetBrains
+.idea/
+*.iml
+
+## NuGet
+*.nupkg
+*.snupkg

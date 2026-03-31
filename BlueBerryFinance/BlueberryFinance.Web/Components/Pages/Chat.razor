@@ -1,0 +1,388 @@
+@page "/chat"
+@inject ChatClient ChatClient
+@inject AgentApprovalClient ApprovalClient
+@inject IJSRuntime JS
+@implements IDisposable
+
+<PageTitle>Chat — Blueberry Finance</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+    <MudText Typo="Typo.h5" Style="font-weight:700;color:#0f1b2d">AI Financial Assistant</MudText>
+    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Default"
+                   OnClick="RefreshApprovalsAsync" aria-label="Refresh approvals" Size="Size.Small" />
+</MudStack>
+
+<!-- ── Pending Approvals ──────────────────────────────────────────────────────── -->
+@if (_pendingApprovals.Count > 0)
+{
+    <MudCard Elevation="1" Class="mb-4 pa-4" Style="border-radius:12px;border-left:4px solid #d69e2e">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.PendingActions" Style="color:#d69e2e;font-size:20px" />
+            <MudText Typo="Typo.subtitle2" Style="font-weight:600;color:#0f1b2d">
+                @_pendingApprovals.Count pending approval(s)
+            </MudText>
+        </MudStack>
+        @foreach (var approval in _pendingApprovals)
+        {
+            <MudCard Elevation="0" Class="mb-2 pa-3" Style="border-radius:8px;background:#fffbeb;border:1px solid #fcd34d">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                    <div>
+                        <MudText Typo="Typo.caption" Style="color:#92400e;font-weight:600;text-transform:uppercase;letter-spacing:.3px">
+                            @FormatToolName(approval.Tool)
+                        </MudText>
+                        <MudText Typo="Typo.body2" Style="color:#374151;margin-top:2px">
+                            @SummarizePayload(approval.Tool, approval.Payload)
+                        </MudText>
+                        <MudText Typo="Typo.caption" Style="color:#9ca3af">
+                            @approval.InsertionDate.ToString("dd MMM HH:mm")
+                        </MudText>
+                    </div>
+                    <MudStack Row="true" Spacing="1">
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small"
+                                   Style="border-radius:6px;min-width:80px"
+                                   OnClick="@(() => ApproveAsync(approval.Id))"
+                                   Disabled="_actingOnApproval">
+                            Approve
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                   Style="border-radius:6px;min-width:80px"
+                                   OnClick="@(() => RejectAsync(approval.Id))"
+                                   Disabled="_actingOnApproval">
+                            Reject
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudCard>
+        }
+    </MudCard>
+}
+
+<!-- ── Chat window ───────────────────────────────────────────────────────────── -->
+<MudCard Elevation="1" Style="border-radius:12px;overflow:hidden;display:flex;flex-direction:column;height:calc(100vh - 260px);min-height:420px">
+    <!-- Messages -->
+    <div id="chat-messages" style="flex:1;overflow-y:auto;padding:20px 24px">
+        @if (_messages.Count == 0)
+        {
+            <div style="text-align:center;padding:40px 0">
+                <MudAvatar Style="background:rgba(79,142,247,0.1);color:#4f8ef7;width:56px;height:56px;margin:0 auto 16px" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" />
+                </MudAvatar>
+                <MudText Typo="Typo.body1" Style="font-weight:600;color:#374151">How can I help you today?</MudText>
+                <MudText Typo="Typo.body2" Style="color:#9ca3af;margin-top:4px">
+                    Ask me about your transactions, balances, or spending patterns.
+                </MudText>
+                <div style="margin-top:24px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
+                    @foreach (var suggestion in _suggestions)
+                    {
+                        <MudButton Variant="Variant.Outlined" Size="Size.Small"
+                                   Style="border-radius:20px;border-color:#e5e7eb;color:#374151;font-size:.8rem"
+                                   OnClick="@(() => UseSuggestion(suggestion))">
+                            @suggestion
+                        </MudButton>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            @foreach (var msg in _messages)
+            {
+                <div style="@(msg.Role == "user" ? "display:flex;justify-content:flex-end;margin-bottom:12px" : "display:flex;justify-content:flex-start;margin-bottom:12px")">
+                    @if (msg.Role == "assistant")
+                    {
+                        <MudAvatar Size="Size.Small" Style="background:#4f8ef7;color:#fff;margin-right:8px;flex-shrink:0;align-self:flex-start;margin-top:2px">
+                            <MudIcon Icon="@Icons.Material.Filled.AutoAwesome" Style="font-size:16px" />
+                        </MudAvatar>
+                    }
+                    <div style="@(msg.Role == "user"
+                        ? "background:#4f8ef7;color:#fff;padding:10px 16px;border-radius:18px 18px 4px 18px;max-width:75%;font-size:.9rem;line-height:1.5"
+                        : "background:#f4f6f9;color:#1f2937;padding:10px 16px;border-radius:18px 18px 18px 4px;max-width:75%;font-size:.9rem;line-height:1.5")">
+                        @if (msg.IsStreaming && string.IsNullOrEmpty(msg.Content))
+                        {
+                            <span style="display:inline-flex;gap:4px;align-items:center">
+                                <span style="width:6px;height:6px;border-radius:50%;background:#9ca3af;animation:bounce 1.2s infinite 0s"></span>
+                                <span style="width:6px;height:6px;border-radius:50%;background:#9ca3af;animation:bounce 1.2s infinite .2s"></span>
+                                <span style="width:6px;height:6px;border-radius:50%;background:#9ca3af;animation:bounce 1.2s infinite .4s"></span>
+                            </span>
+                        }
+                        else
+                        {
+                            @((MarkupString)FormatMessage(msg.Content))
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Input area -->
+    <div style="border-top:1px solid #f3f4f6;padding:16px 20px;background:#fff">
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-2" ShowCloseIcon="true"
+                      CloseIconClicked="@(() => _error = null)">@_error</MudAlert>
+        }
+        @if (_attachedImageName is not null)
+        {
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:6px 12px;background:#f0f9ff;border-radius:8px;border:1px solid #bae6fd;width:fit-content">
+                <MudIcon Icon="@Icons.Material.Filled.Image" Style="color:#0284c7;font-size:16px" />
+                <MudText Typo="Typo.caption" Style="color:#0369a1">@_attachedImageName</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small"
+                               Style="width:20px;height:20px;color:#64748b"
+                               OnClick="ClearAttachedImage" aria-label="Remove image" />
+            </div>
+        }
+        <InputFile id="chat-image-input" OnChange="OnImageSelectedAsync"
+                   accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" />
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIconButton Icon="@(_uploadingImage ? Icons.Material.Filled.HourglassEmpty : Icons.Material.Filled.Image)"
+                           Color="Color.Default" Size="Size.Medium"
+                           Style="border-radius:50%;flex-shrink:0"
+                           OnClick="TriggerImageUploadAsync"
+                           Disabled="_streaming || _uploadingImage"
+                           aria-label="Attach image" />
+            <MudTextField @bind-Value="_input" Placeholder="Ask me about your finances…"
+                          Variant="Variant.Outlined" Immediate="true"
+                          OnKeyDown="OnKeyDownAsync"
+                          Disabled="_streaming"
+                          Style="flex:1;border-radius:24px"
+                          Adornment="Adornment.None" />
+            <MudIconButton Icon="@(_streaming ? Icons.Material.Filled.Stop : Icons.Material.Filled.Send)"
+                           Color="Color.Primary" Variant="Variant.Filled"
+                           Style="border-radius:50%;width:44px;height:44px"
+                           OnClick="@(async () => { if (_streaming) CancelStream(); else await SendAsync(); })"
+                           aria-label="@(_streaming ? "Stop" : "Send")" />
+        </MudStack>
+    </div>
+</MudCard>
+
+<style>
+    @@keyframes bounce {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-6px); }
+    }
+</style>
+
+@code {
+    readonly List<ChatMessage> _messages = [];
+    readonly string[] _suggestions =
+    [
+        "How much did I spend this month?",
+        "What are my bank account balances?",
+        "Show my last 10 transactions",
+        "What's my biggest expense category?"
+    ];
+
+    string _input = string.Empty;
+    bool _streaming;
+    bool _uploadingImage;
+    bool _actingOnApproval;
+    string? _error;
+    string? _attachedImageUrl;
+    string? _attachedImageName;
+    IReadOnlyList<AgentApprovalViewModel> _pendingApprovals = [];
+
+    CancellationTokenSource _cts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshApprovalsAsync();
+    }
+
+    private async Task SendAsync()
+    {
+        var text = _input.Trim();
+        if (string.IsNullOrEmpty(text) && _attachedImageUrl is null) return;
+        if (_streaming) return;
+
+        var prompt = BuildPrompt(text, _attachedImageUrl);
+        var displayText = _attachedImageName is not null && !string.IsNullOrEmpty(text)
+            ? $"{text}\n[Image: {_attachedImageName}]"
+            : _attachedImageName is not null
+                ? $"[Image: {_attachedImageName}]"
+                : text;
+
+        _input = string.Empty;
+        _attachedImageUrl = null;
+        _attachedImageName = null;
+        _error = null;
+        _messages.Add(new ChatMessage("user", displayText));
+        var assistantMsg = new ChatMessage("assistant", string.Empty, IsStreaming: true);
+        _messages.Add(assistantMsg);
+        _streaming = true;
+
+        _cts = new CancellationTokenSource();
+
+        try
+        {
+            await foreach (var chunk in ChatClient.StreamAsync(prompt, _cts.Token))
+            {
+                assistantMsg.Content += chunk;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) { /* user stopped */ }
+        catch (Exception ex)
+        {
+            _error = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            assistantMsg.IsStreaming = false;
+            _streaming = false;
+            await InvokeAsync(StateHasChanged);
+            await RefreshApprovalsAsync();
+        }
+    }
+
+    private void CancelStream()
+    {
+        _cts.Cancel();
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+            await SendAsync();
+    }
+
+    private void UseSuggestion(string suggestion)
+    {
+        _input = suggestion;
+    }
+
+    private async Task ApproveAsync(Guid id)
+    {
+        _actingOnApproval = true;
+        try
+        {
+            await ApprovalClient.ApproveAsync(id);
+            await RefreshApprovalsAsync();
+        }
+        catch (Exception ex) { _error = $"Failed to approve: {ex.Message}"; }
+        finally { _actingOnApproval = false; }
+    }
+
+    private async Task RejectAsync(Guid id)
+    {
+        _actingOnApproval = true;
+        try
+        {
+            await ApprovalClient.RejectAsync(id);
+            await RefreshApprovalsAsync();
+        }
+        catch (Exception ex) { _error = $"Failed to reject: {ex.Message}"; }
+        finally { _actingOnApproval = false; }
+    }
+
+    private async Task RefreshApprovalsAsync()
+    {
+        try { _pendingApprovals = await ApprovalClient.GetPendingAsync() ?? []; }
+        catch { _pendingApprovals = []; }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private static string FormatToolName(string tool) => tool switch
+    {
+        "create_transaction" => "Register Transaction",
+        "delete_transaction" => "Delete Transaction",
+        _ => tool
+    };
+
+    private static string SummarizePayload(string tool, string payload)
+    {
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(payload);
+            var root = doc.RootElement;
+            return tool switch
+            {
+                "create_transaction" => $"{(root.TryGetProperty("transactionType", out var tt) ? tt.GetString() : "?")} — " +
+                                        $"{(root.TryGetProperty("description", out var desc) ? desc.GetString() : "?")} — " +
+                                        $"{(root.TryGetProperty("amount", out var amt) ? amt.GetDecimal().ToString("N2") : "?")}",
+                "delete_transaction" => $"Transaction ID: {(root.TryGetProperty("transactionId", out var tid) ? tid.GetString() : "?")}",
+                _ => payload
+            };
+        }
+        catch { return payload; }
+    }
+
+    private async Task TriggerImageUploadAsync()
+    {
+        await JS.InvokeVoidAsync("eval", "document.getElementById('chat-image-input').click()");
+    }
+
+    private async Task OnImageSelectedAsync(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file is null) return;
+
+        _uploadingImage = true;
+        _error = null;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            await using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            var url = await ChatClient.UploadImageAsync(stream, file.Name, file.ContentType);
+            if (url is null)
+            {
+                _error = "Image upload failed. Please try again.";
+            }
+            else
+            {
+                _attachedImageUrl = url;
+                _attachedImageName = file.Name;
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Image upload error: {ex.Message}";
+        }
+        finally
+        {
+            _uploadingImage = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void ClearAttachedImage()
+    {
+        _attachedImageUrl = null;
+        _attachedImageName = null;
+    }
+
+    private static string BuildPrompt(string text, string? imageUrl)
+    {
+        if (imageUrl is null) return text;
+        return string.IsNullOrEmpty(text)
+            ? $"Please analyze this receipt or invoice image.\n\nImage URL: {imageUrl}"
+            : $"{text}\n\nImage URL: {imageUrl}";
+    }
+
+    private static string FormatMessage(string content)
+    {
+        // Convert newlines to <br> for basic markdown-ish rendering
+        return content
+            .Replace("&", "&amp;")
+            .Replace("<", "&lt;")
+            .Replace(">", "&gt;")
+            .Replace("\n", "<br />");
+    }
+
+    public void Dispose() => _cts.Dispose();
+
+    class ChatMessage
+    {
+        public string Role { get; init; }
+        public string Content { get; set; }
+        public bool IsStreaming { get; set; }
+
+        public ChatMessage(string role, string content, bool IsStreaming = false)
+        {
+            Role = role;
+            Content = content;
+            this.IsStreaming = IsStreaming;
+        }
+    }
+}
