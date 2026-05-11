@@ -1,25 +1,32 @@
-﻿using BlueBerryFinance.API.Data.Entities.enums;
+using BlueBerryFinance.API.Data.Entities.Enums;
 using BlueBerryFinance.Common.DomainObjects;
 
 namespace BlueBerryFinance.API.Data.Entities
 {
     public class Transaction : EntityBase
     {
-        public int CurrencyId { get; set; }
-        public int StoreId { get; set; }
-        public int CategoryId { get; set; }
-        public int BankAccountId { get; set; }
-        public int FixedExpenseId { get; set; }
-        public int OriginTypeId { get; set; }
-        public TransactionType TransactionType { get; set; }
-        public decimal Amount { get; set; }
-        public DateTime TransactionDate { get; set; } = DateTime.UtcNow;
-        public Store Store { get; set; }
-        public Category Category { get; set; }
-        public Currency Currency { get; set; }
-        public BankAccount BankAccount { get; set; }
-        public FixedExpense FixedExpense { get; set; }
+        public Guid UserId { get; set; }
+        public Guid BankAccountId { get; set; }
+        public Guid StoreId { get; set; }
+        public Guid CategoryId { get; set; }
+        public Guid CurrencyId { get; set; }
+        public Guid? FixedExpenseId { get; set; }
         public OriginType OriginType { get; set; }
+        public TransactionType TransactionType { get; set; }
+        public TransactionSource Source { get; set; } = TransactionSource.Manual;
+        public decimal Amount { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public DateTime TransactionDate { get; set; } = DateTime.UtcNow;
+        public string? ImageUrl { get; set; }
+        public string CorrelationId { get; set; } = Guid.NewGuid().ToString();
+
+        public User User { get; set; } = null!;
+        public BankAccount BankAccount { get; set; } = null!;
+        public Store Store { get; set; } = null!;
+        public Category Category { get; set; } = null!;
+        public Currency Currency { get; set; } = null!;
+        public FixedExpense? FixedExpense { get; set; }
+        public ICollection<TransactionItem> Items { get; set; } = [];
 
         public Transaction() { }
     }

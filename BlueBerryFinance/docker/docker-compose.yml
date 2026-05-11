@@ -1,0 +1,126 @@
+name: blueberry-finance-local
+
+services:
+
+  local-dev-postgres:
+    container_name: local-dev-postgres
+    image: postgres:16.3
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  local-dev-rabbitmq:
+    container_name: local-dev-rabbitmq
+    image: rabbitmq:3.13.3-management
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  local-dev-minio:
+    container_name: local-dev-minio
+    image: minio/minio:RELEASE.2024-06-13T22-53-53Z
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+
+  local-dev-litellm:
+    container_name: local-dev-litellm
+    image: ghcr.io/berriai/litellm:main-v1.40.10
+    restart: unless-stopped
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./litellm/config.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml"]
+
+  local-dev-librechat:
+    container_name: local-dev-librechat
+    image: ghcr.io/danny-avila/librechat:v0.7.5
+    restart: unless-stopped
+    environment:
+      OPENAI_REVERSE_PROXY: http://local-dev-litellm:4000/v1
+      MONGO_URI: mongodb://local-dev-mongo:27017/LibreChat
+      OPENAI_API_KEY: ${LITELLM_MASTER_KEY}
+      OPENAI_BASE_URL: http://local-dev-litellm:4000/v1
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_BASE_URL: ${LITELLM_BASE_URL}
+      JWT_SECRET: ${LIBRECHAT_JWT_SECRET}
+      JWT_REFRESH_SECRET: ${LIBRECHAT_JWT_REFRESH_SECRET}
+      CREDS_KEY: ${LIBRECHAT_CREDS_KEY}
+      CREDS_IV: ${LIBRECHAT_CREDS_IV}
+      LIBRECHAT_SERVICE_JWT: ${LIBRECHAT_SERVICE_JWT}
+      BLUEBERRY_API_BASE_URL: ${BLUEBERRY_API_BASE_URL}
+      CONFIG_PATH: /app/librechat.yaml
+      APP_TITLE: BlueberryFinance
+      ALLOW_REGISTRATION: "true"
+      ALLOW_EMAIL_LOGIN: "true"
+    volumes:
+      - ./librechat/librechat.yaml:/app/librechat.yaml:ro
+      - ./librechat/logo.png:/app/client/public/assets/logo.png:ro
+      - ./librechat/logo.png:/app/client/public/favicon.png:ro
+    ports:
+      - "3080:3080"
+    depends_on:
+      - local-dev-litellm
+      - local-dev-mongo
+
+  local-dev-mongo:
+    container_name: local-dev-mongo
+    image: mongo:7.0.9
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  local-dev-seq:
+    container_name: local-dev-seq
+    image: datalust/seq:2024.2
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_API_KEY: ${SEQ_API_KEY}
+    ports:
+      - "5341:5341"
+      - "8081:80"
+    volumes:
+      - seq-data:/data
+
+  local-dev-portainer:
+    container_name: local-dev-portainer
+    image: portainer/portainer-ce:2.20.3
+    restart: unless-stopped
+    ports:
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+
+volumes:
+  postgres-data:
+  minio-data:
+  mongo-data:
+  seq-data:
+  portainer-data:

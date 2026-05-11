@@ -16,7 +16,7 @@
         public virtual void Delete()
         {
             IsDeleted = true;
-            DeletionDate = DateTime.Now;
+            DeletionDate = DateTime.UtcNow;
         }
     }
 }

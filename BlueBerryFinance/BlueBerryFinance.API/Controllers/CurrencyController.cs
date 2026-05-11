@@ -1,18 +1,32 @@
-﻿using BlueBerryFinance.API.Data.Entities;
-using BlueBerryFinance.API.Data.Entities.enums;
+using BlueBerryFinance.API.Application.Features.Currency;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlueBerryFinance.API.Controllers
 {
-    [Route("currency/")]
-    public class CurrencyController : Controller
+    [Route("currency")]
+    [Authorize]
+    public class CurrencyController : BaseController
     {
-        public CurrencyController() { }
+        private readonly ICurrencyHandler _handler;
+
+        public CurrencyController(ICurrencyHandler handler)
+        {
+            _handler = handler;
+        }
 
         [HttpGet]
-        public ActionResult<List<Currency>> Get()
+        public async Task<IActionResult> Get()
         {
-            return new List<Currency>();
+            try
+            {
+                var result = await _handler.GetAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex);
+            }
         }
     }
 }

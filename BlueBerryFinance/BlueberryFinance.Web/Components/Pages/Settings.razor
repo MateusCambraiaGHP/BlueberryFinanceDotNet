@@ -1,0 +1,476 @@
+@page "/settings"
+@inject CategoryClient CategoryClient
+@inject StoreClient StoreClient
+@inject FixedExpenseClient FixedExpenseClient
+@inject CurrencyClient CurrencyClient
+
+<PageTitle>Settings — Blueberry Finance</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-6" Style="font-weight:700;color:#0f1b2d">Settings</MudText>
+
+@if (_error is not null)
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">
+        @_error
+    </MudAlert>
+}
+
+<MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-5"
+         Style="border-radius:12px;background:#fff">
+    <!-- ── Categories ────────────────────────────────────────────────────────── -->
+    <MudTabPanel Text="Categories" Icon="@Icons.Material.Filled.Label">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+            <MudText Typo="Typo.subtitle1" Style="font-weight:600;color:#0f1b2d">Categories</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => _showCatForm = !_showCatForm)" Size="Size.Small" Style="border-radius:8px">
+                Add Category
+            </MudButton>
+        </MudStack>
+
+        @if (_showCatForm)
+        {
+            <MudCard Elevation="0" Class="mb-4 pa-4" Style="border-radius:10px;border:1px solid #e5e7eb;border-left:3px solid #4f8ef7">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_catForm.Name" Label="Name" Variant="Variant.Outlined"
+                                      Placeholder="e.g. Groceries" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="3">
+                        <MudTextField @bind-Value="_catForm.Icon" Label="Icon (Material name)" Variant="Variant.Outlined"
+                                      Placeholder="ShoppingCart" />
+                    </MudItem>
+                    <MudItem xs="12" sm="3">
+                        <MudTextField @bind-Value="_catForm.Color" Label="Color (hex)" Variant="Variant.Outlined"
+                                      Placeholder="#4f8ef7" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudSelect @bind-Value="_catForm.Type" Label="Type" Variant="Variant.Outlined" Required="true">
+                            <MudSelectItem Value="@("Income")">Income</MudSelectItem>
+                            <MudSelectItem Value="@("Expense")">Expense</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
+                <MudStack Row="true" Class="mt-3" Spacing="2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveCategoryAsync"
+                               Disabled="_saving" Size="Size.Small" Style="border-radius:8px">
+                        @(_saving ? "Saving…" : "Save")
+                    </MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Default" Size="Size.Small"
+                               OnClick="@(() => { _showCatForm = false; _catForm = new(); })">Cancel</MudButton>
+                </MudStack>
+            </MudCard>
+        }
+
+        @if (_loadingCats)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="120px" />
+        }
+        else
+        {
+            <MudTable Items="_categories" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Type</MudTh>
+                    <MudTh>Color</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <div style="@($"width:10px;height:10px;border-radius:50%;background:{context.Color}")"></div>
+                            <MudText Typo="Typo.body2">@context.Name</MudText>
+                        </MudStack>
+                    </MudTd>
+                    <MudTd DataLabel="Type">
+                        <MudChip T="string" Size="Size.Small"
+                                 Style="@(context.Type == "Income"
+                                     ? "background:rgba(56,161,105,0.1);color:#38a169;font-size:.75rem;height:22px"
+                                     : "background:rgba(229,62,62,0.1);color:#e53e3e;font-size:.75rem;height:22px")">
+                            @context.Type
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Color">
+                        <MudText Typo="Typo.caption" Style="color:#6b7280">@context.Color</MudText>
+                    </MudTd>
+                    <MudTd Style="text-align:right">
+                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small"
+                                       Color="Color.Error" OnClick="@(() => DeleteCategoryAsync(context.Id))" />
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Class="pa-4" Style="color:#9ca3af;text-align:center">No categories yet.</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        }
+    </MudTabPanel>
+
+    <!-- ── Stores ─────────────────────────────────────────────────────────────── -->
+    <MudTabPanel Text="Stores" Icon="@Icons.Material.Filled.Store">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+            <MudText Typo="Typo.subtitle1" Style="font-weight:600;color:#0f1b2d">Stores</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => _showStoreForm = !_showStoreForm)" Size="Size.Small" Style="border-radius:8px">
+                Add Store
+            </MudButton>
+        </MudStack>
+
+        @if (_showStoreForm)
+        {
+            <MudCard Elevation="0" Class="mb-4 pa-4" Style="border-radius:10px;border:1px solid #e5e7eb;border-left:3px solid #4f8ef7">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_storeForm.Name" Label="Store Name" Variant="Variant.Outlined"
+                                      Placeholder="e.g. Continente" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudSelect @bind-Value="_storeForm.CategoryId" Label="Category" Variant="Variant.Outlined" Required="true">
+                            @foreach (var c in _categories)
+                            {
+                                <MudSelectItem Value="@c.Id">@c.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
+                <MudStack Row="true" Class="mt-3" Spacing="2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveStoreAsync"
+                               Disabled="_saving" Size="Size.Small" Style="border-radius:8px">
+                        @(_saving ? "Saving…" : "Save")
+                    </MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Default" Size="Size.Small"
+                               OnClick="@(() => { _showStoreForm = false; _storeForm = new(); })">Cancel</MudButton>
+                </MudStack>
+            </MudCard>
+        }
+
+        @if (_loadingStores)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="120px" />
+        }
+        else
+        {
+            <MudTable Items="_stores" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Category</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name"><MudText Typo="Typo.body2">@context.Name</MudText></MudTd>
+                    <MudTd DataLabel="Category">
+                        <MudText Typo="Typo.body2" Style="color:#6b7280">@context.CategoryName</MudText>
+                    </MudTd>
+                    <MudTd Style="text-align:right">
+                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small"
+                                       Color="Color.Error" OnClick="@(() => DeleteStoreAsync(context.Id))" />
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Class="pa-4" Style="color:#9ca3af;text-align:center">No stores yet.</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        }
+    </MudTabPanel>
+
+    <!-- ── Fixed Expenses ────────────────────────────────────────────────────── -->
+    <MudTabPanel Text="Fixed Expenses" Icon="@Icons.Material.Filled.Repeat">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+            <MudText Typo="Typo.subtitle1" Style="font-weight:600;color:#0f1b2d">Fixed Expenses</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => _showExpForm = !_showExpForm)" Size="Size.Small" Style="border-radius:8px">
+                Add Fixed Expense
+            </MudButton>
+        </MudStack>
+
+        @if (_showExpForm)
+        {
+            <MudCard Elevation="0" Class="mb-4 pa-4" Style="border-radius:10px;border:1px solid #e5e7eb;border-left:3px solid #4f8ef7">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_expForm.Name" Label="Name" Variant="Variant.Outlined"
+                                      Placeholder="e.g. Netflix" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_expForm.Description" Label="Description" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudNumericField @bind-Value="_expForm.Amount" Label="Amount" Variant="Variant.Outlined"
+                                         Format="N2" Min="0m" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudSelect @bind-Value="_expForm.CurrencyId" Label="Currency" Variant="Variant.Outlined" Required="true">
+                            @foreach (var c in _currencies)
+                            {
+                                <MudSelectItem Value="@c.Id">@c.Symbol — @c.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudSelect @bind-Value="_expForm.StoreId" Label="Store" Variant="Variant.Outlined" Required="true">
+                            @foreach (var s in _stores)
+                            {
+                                <MudSelectItem Value="@s.Id">@s.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="4">
+                        <MudNumericField @bind-Value="_expForm.DayOfMonth" Label="Day of Month" Variant="Variant.Outlined"
+                                         Min="1" Max="28" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="4" Class="d-flex align-center">
+                        <MudCheckBox @bind-Value="_expForm.IsRecurring" Label="Recurring monthly" Color="Color.Primary" />
+                    </MudItem>
+                </MudGrid>
+                <MudStack Row="true" Class="mt-3" Spacing="2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveFixedExpenseAsync"
+                               Disabled="_saving" Size="Size.Small" Style="border-radius:8px">
+                        @(_saving ? "Saving…" : "Save")
+                    </MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Default" Size="Size.Small"
+                               OnClick="@(() => { _showExpForm = false; _expForm = new(); })">Cancel</MudButton>
+                </MudStack>
+            </MudCard>
+        }
+
+        @if (_loadingExp)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="120px" />
+        }
+        else
+        {
+            <MudTable Items="_fixedExpenses" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Amount</MudTh>
+                    <MudTh>Store</MudTh>
+                    <MudTh>Day</MudTh>
+                    <MudTh>Recurring</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name"><MudText Typo="Typo.body2">@context.Name</MudText></MudTd>
+                    <MudTd DataLabel="Amount">
+                        <MudText Typo="Typo.body2" Style="color:#e53e3e;font-weight:600">
+                            @context.CurrencySymbol@context.Amount.ToString("N2")
+                        </MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Store">
+                        <MudText Typo="Typo.body2" Style="color:#6b7280">@context.StoreName</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Day">
+                        <MudText Typo="Typo.body2">@context.DayOfMonth</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Recurring">
+                        <MudIcon Icon="@(context.IsRecurring ? Icons.Material.Filled.Check : Icons.Material.Filled.Close)"
+                                 Style="@(context.IsRecurring ? "color:#38a169;font-size:18px" : "color:#9ca3af;font-size:18px")" />
+                    </MudTd>
+                    <MudTd Style="text-align:right">
+                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small"
+                                       Color="Color.Error" OnClick="@(() => DeleteFixedExpenseAsync(context.Id))" />
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Class="pa-4" Style="color:#9ca3af;text-align:center">No fixed expenses yet.</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        }
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    bool _saving;
+    string? _error;
+
+    bool _loadingCats = true;
+    bool _loadingStores = true;
+    bool _loadingExp = true;
+
+    bool _showCatForm;
+    bool _showStoreForm;
+    bool _showExpForm;
+
+    IReadOnlyList<CategoryViewModel> _categories = [];
+    IReadOnlyList<StoreViewModel> _stores = [];
+    IReadOnlyList<FixedExpenseViewModel> _fixedExpenses = [];
+    IReadOnlyList<CurrencyViewModel> _currencies = [];
+
+    CategoryForm _catForm = new();
+    StoreForm _storeForm = new();
+    FixedExpenseForm _expForm = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var catsTask = CategoryClient.GetAsync();
+            var storesTask = StoreClient.GetAsync();
+            var expTask = FixedExpenseClient.GetAsync();
+            var curTask = CurrencyClient.GetAsync();
+
+            await Task.WhenAll(catsTask, storesTask, expTask, curTask);
+
+            _categories = await catsTask ?? [];
+            _stores = await storesTask ?? [];
+            _fixedExpenses = await expTask ?? [];
+            _currencies = await curTask ?? [];
+
+            if (_currencies.Count > 0)
+                _expForm.CurrencyId = _currencies[0].Id;
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load settings data: {ex.Message}";
+        }
+        finally
+        {
+            _loadingCats = false;
+            _loadingStores = false;
+            _loadingExp = false;
+        }
+    }
+
+    // ── Categories ──────────────────────────────────────────────────────────────
+
+    private async Task SaveCategoryAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_catForm.Name)) return;
+        _saving = true;
+        _error = null;
+        try
+        {
+            await CategoryClient.CreateAsync(new
+            {
+                name = _catForm.Name,
+                icon = _catForm.Icon,
+                color = string.IsNullOrWhiteSpace(_catForm.Color) ? "#4f8ef7" : _catForm.Color,
+                type = _catForm.Type
+            });
+            _showCatForm = false;
+            _catForm = new();
+            _categories = await CategoryClient.GetAsync() ?? [];
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to save category: {ex.Message}";
+        }
+        finally { _saving = false; }
+    }
+
+    private async Task DeleteCategoryAsync(Guid id)
+    {
+        _error = null;
+        try
+        {
+            await CategoryClient.DeleteAsync(id);
+            _categories = await CategoryClient.GetAsync() ?? [];
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to delete category: {ex.Message}";
+        }
+    }
+
+    // ── Stores ──────────────────────────────────────────────────────────────────
+
+    private async Task SaveStoreAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_storeForm.Name) || _storeForm.CategoryId == Guid.Empty) return;
+        _saving = true;
+        _error = null;
+        try
+        {
+            await StoreClient.CreateAsync(new { name = _storeForm.Name, categoryId = _storeForm.CategoryId });
+            _showStoreForm = false;
+            _storeForm = new();
+            _stores = await StoreClient.GetAsync() ?? [];
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to save store: {ex.Message}";
+        }
+        finally { _saving = false; }
+    }
+
+    private async Task DeleteStoreAsync(Guid id)
+    {
+        _error = null;
+        try
+        {
+            await StoreClient.DeleteAsync(id);
+            _stores = await StoreClient.GetAsync() ?? [];
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to delete store: {ex.Message}";
+        }
+    }
+
+    // ── Fixed Expenses ───────────────────────────────────────────────────────────
+
+    private async Task SaveFixedExpenseAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_expForm.Name) || _expForm.CurrencyId == Guid.Empty || _expForm.StoreId == Guid.Empty) return;
+        _saving = true;
+        _error = null;
+        try
+        {
+            await FixedExpenseClient.CreateAsync(new
+            {
+                name = _expForm.Name,
+                description = _expForm.Description,
+                amount = _expForm.Amount,
+                currencyId = _expForm.CurrencyId,
+                storeId = _expForm.StoreId,
+                dayOfMonth = _expForm.DayOfMonth,
+                isRecurring = _expForm.IsRecurring
+            });
+            _showExpForm = false;
+            _expForm = new();
+            if (_currencies.Count > 0) _expForm.CurrencyId = _currencies[0].Id;
+            _fixedExpenses = await FixedExpenseClient.GetAsync() ?? [];
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to save fixed expense: {ex.Message}";
+        }
+        finally { _saving = false; }
+    }
+
+    private async Task DeleteFixedExpenseAsync(Guid id)
+    {
+        _error = null;
+        try
+        {
+            await FixedExpenseClient.DeleteAsync(id);
+            _fixedExpenses = await FixedExpenseClient.GetAsync() ?? [];
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to delete fixed expense: {ex.Message}";
+        }
+    }
+
+    class CategoryForm
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Icon { get; set; } = string.Empty;
+        public string Color { get; set; } = "#4f8ef7";
+        public string Type { get; set; } = "Expense";
+    }
+
+    class StoreForm
+    {
+        public string Name { get; set; } = string.Empty;
+        public Guid CategoryId { get; set; }
+    }
+
+    class FixedExpenseForm
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public Guid CurrencyId { get; set; }
+        public Guid StoreId { get; set; }
+        public int DayOfMonth { get; set; } = 1;
+        public bool IsRecurring { get; set; } = true;
+    }
+}

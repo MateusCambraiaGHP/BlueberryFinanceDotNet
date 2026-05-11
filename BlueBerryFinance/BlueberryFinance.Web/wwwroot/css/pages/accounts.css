@@ -1,0 +1,7 @@
+.account-card {
+    transition: box-shadow 0.15s ease;
+}
+
+.account-card:hover {
+    box-shadow: 0 4px 16px rgba(15, 27, 45, 0.1);
+}

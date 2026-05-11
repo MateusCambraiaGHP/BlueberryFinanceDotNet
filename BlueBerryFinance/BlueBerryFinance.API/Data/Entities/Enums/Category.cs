@@ -1,11 +1,2 @@
-﻿namespace BlueBerryFinance.API.Data.Entities.enums
-{
-    public enum Category
-    {
-        None = 0,
-        Rent = 1,
-        Electricity = 2,
-        Food = 3,
-        Salary = 4,
-    }
-}
+// Category is now a proper entity table — see Data/Entities/Category.cs
+// This file intentionally left empty.

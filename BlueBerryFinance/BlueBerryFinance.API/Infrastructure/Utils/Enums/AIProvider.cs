@@ -2,8 +2,6 @@
 {
     public enum AIProvider
     {
-        OpenAI,
-        AzureOpenAI,
-        Anthropic
+        LiteLLM = 0
     }
 }

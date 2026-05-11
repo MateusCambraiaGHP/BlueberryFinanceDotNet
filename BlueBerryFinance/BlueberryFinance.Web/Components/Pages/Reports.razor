@@ -1,0 +1,201 @@
+@page "/reports"
+@inject ReportClient ReportClient
+@using BlueBerryFinance.Common.ViewModels
+
+<PageTitle>Reports — Blueberry Finance</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+    <MudText Typo="Typo.h5" Style="font-weight:700;color:#0f1b2d">Monthly Report</MudText>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudSelect T="int" @bind-Value="_year" Label="Year" Variant="Variant.Outlined"
+                   Dense="true" Style="width:110px">
+            @for (var y = DateTime.UtcNow.Year; y >= DateTime.UtcNow.Year - 3; y--)
+            {
+                <MudSelectItem Value="y">@y</MudSelectItem>
+            }
+        </MudSelect>
+        <MudSelect T="int" @bind-Value="_month" Label="Month" Variant="Variant.Outlined"
+                   Dense="true" Style="width:140px">
+            @foreach (var (num, name) in _months)
+            {
+                <MudSelectItem Value="num">@name</MudSelectItem>
+            }
+        </MudSelect>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                   Style="border-radius:8px" OnClick="LoadAsync" Disabled="_loading">
+            @if (_loading) { <MudProgressCircular Size="Size.Small" Indeterminate="true" /> }
+            else { <span>Load</span> }
+        </MudButton>
+    </MudStack>
+</MudStack>
+
+@if (_error is not null)
+{
+    <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4" ShowCloseIcon="true"
+              CloseIconClicked="@(() => _error = null)">@_error</MudAlert>
+}
+
+@if (_report is null && !_loading)
+{
+    <MudCard Elevation="1" Style="border-radius:12px;padding:48px 32px;text-align:center">
+        <MudAvatar Style="background:rgba(79,142,247,0.1);color:#4f8ef7;width:64px;height:64px;margin:0 auto 20px" Size="Size.Large">
+            <MudIcon Icon="@Icons.Material.Filled.BarChart" Style="font-size:32px" />
+        </MudAvatar>
+        <MudText Typo="Typo.body1" Style="font-weight:600;color:#374151">Select a month and click Load</MudText>
+        <MudText Typo="Typo.body2" Style="color:#9ca3af;margin-top:4px">
+            Your income, expenses, and category breakdown will appear here.
+        </MudText>
+    </MudCard>
+}
+else if (_report is not null)
+{
+    <!-- ── Totals ─────────────────────────────────────────────────────────── -->
+    <MudGrid Class="mb-4">
+        @foreach (var t in _report.Totals)
+        {
+            <MudItem xs="12" sm="4">
+                <MudCard Elevation="1" Style="border-radius:12px;padding:20px">
+                    <MudText Typo="Typo.caption" Style="color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.4px">
+                        @t.CurrencyCode Income
+                    </MudText>
+                    <MudText Typo="Typo.h5" Style="font-weight:700;color:#059669;margin-top:4px">
+                        @t.CurrencySymbol @t.TotalIncome.ToString("N2")
+                    </MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudCard Elevation="1" Style="border-radius:12px;padding:20px">
+                    <MudText Typo="Typo.caption" Style="color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.4px">
+                        @t.CurrencyCode Expense
+                    </MudText>
+                    <MudText Typo="Typo.h5" Style="font-weight:700;color:#dc2626;margin-top:4px">
+                        @t.CurrencySymbol @t.TotalExpense.ToString("N2")
+                    </MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudCard Elevation="1" Style="border-radius:12px;padding:20px">
+                    <MudText Typo="Typo.caption" Style="color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.4px">
+                        @t.CurrencyCode Balance
+                    </MudText>
+                    <MudText Typo="Typo.h5" Style="@($"font-weight:700;color:{(t.Balance >= 0 ? "#059669" : "#dc2626")};margin-top:4px")">
+                        @t.CurrencySymbol @t.Balance.ToString("N2")
+                    </MudText>
+                </MudCard>
+            </MudItem>
+        }
+        @if (_report.Totals.Count == 0)
+        {
+            <MudItem xs="12">
+                <MudText Typo="Typo.body2" Style="color:#9ca3af;text-align:center;padding:16px">
+                    No transactions found for this period.
+                </MudText>
+            </MudItem>
+        }
+    </MudGrid>
+
+    <!-- ── Category Breakdown ─────────────────────────────────────────────── -->
+    @if (_report.Categories.Count > 0)
+    {
+        <MudCard Elevation="1" Style="border-radius:12px;margin-bottom:24px" Class="pa-4">
+            <MudText Typo="Typo.subtitle1" Style="font-weight:700;color:#0f1b2d;margin-bottom:12px">
+                By Category
+            </MudText>
+            <MudTable Items="_report.Categories" Dense="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Category</MudTh>
+                    <MudTh>Type</MudTh>
+                    <MudTh>Currency</MudTh>
+                    <MudTh Style="text-align:right">Total</MudTh>
+                    <MudTh Style="text-align:right">Transactions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <div style="@($"width:10px;height:10px;border-radius:50%;background:{context.CategoryColor};flex-shrink:0")"></div>
+                            <MudText Typo="Typo.body2">@context.CategoryName</MudText>
+                        </MudStack>
+                    </MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small"
+                                 Style="@($"background:{(context.Type == "Income" ? "#d1fae5" : "#fee2e2")};color:{(context.Type == "Income" ? "#065f46" : "#991b1b")};height:22px")">
+                            @context.Type
+                        </MudChip>
+                    </MudTd>
+                    <MudTd>@context.CurrencyCode</MudTd>
+                    <MudTd Style="text-align:right;font-weight:600">
+                        @context.CurrencySymbol @context.Total.ToString("N2")
+                    </MudTd>
+                    <MudTd Style="text-align:right;color:#6b7280">@context.TransactionCount</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudCard>
+    }
+
+    <!-- ── Top Stores ─────────────────────────────────────────────────────── -->
+    @if (_report.Stores.Count > 0)
+    {
+        <MudCard Elevation="1" Style="border-radius:12px" Class="pa-4">
+            <MudText Typo="Typo.subtitle1" Style="font-weight:700;color:#0f1b2d;margin-bottom:12px">
+                Top 10 Stores
+            </MudText>
+            <MudTable Items="_report.Stores" Dense="true" Hover="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>Store</MudTh>
+                    <MudTh>Currency</MudTh>
+                    <MudTh Style="text-align:right">Total</MudTh>
+                    <MudTh Style="text-align:right">Transactions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.StoreName</MudTd>
+                    <MudTd>@context.CurrencyCode</MudTd>
+                    <MudTd Style="text-align:right;font-weight:600">
+                        @context.CurrencySymbol @context.Total.ToString("N2")
+                    </MudTd>
+                    <MudTd Style="text-align:right;color:#6b7280">@context.TransactionCount</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudCard>
+    }
+}
+
+@code {
+    static readonly (int, string)[] _months =
+    [
+        (1, "January"),  (2, "February"),  (3, "March"),     (4, "April"),
+        (5, "May"),      (6, "June"),      (7, "July"),      (8, "August"),
+        (9, "September"),(10, "October"),  (11, "November"), (12, "December")
+    ];
+
+    int _year  = DateTime.UtcNow.Year;
+    int _month = DateTime.UtcNow.Month == 1 ? 12 : DateTime.UtcNow.Month - 1;
+
+    bool _loading;
+    string? _error;
+    MonthlyReportViewModel? _report;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error   = null;
+        _report  = null;
+
+        try
+        {
+            _report = await ReportClient.GetMonthlyAsync(_year, _month);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load report: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

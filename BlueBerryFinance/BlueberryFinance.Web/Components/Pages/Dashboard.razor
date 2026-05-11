@@ -1,0 +1,175 @@
+@page "/"
+@inject BankAccountClient AccountClient
+@inject TransactionClient TransactionClient
+
+<PageTitle>Dashboard — Blueberry Finance</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-6" Style="font-weight:700;color:#0f1b2d">Dashboard</MudText>
+
+@if (_error)
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4">
+        Could not load dashboard data. Please <MudLink Href="/login">sign in again</MudLink>.
+    </MudAlert>
+}
+else if (_loading)
+{
+    <MudGrid>
+        @for (int i = 0; i < 3; i++)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="120px" Class="rounded-lg" />
+            </MudItem>
+        }
+    </MudGrid>
+}
+else
+{
+    <MudGrid Class="mb-6">
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Elevation="1" Class="pa-5" Style="border-radius:12px">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                    <div>
+                        <MudText Typo="Typo.caption" Style="color:#6b7280;text-transform:uppercase;letter-spacing:.5px;font-weight:600">
+                            Total Balance
+                        </MudText>
+                        <MudText Typo="Typo.h5" Style="font-weight:700;color:#0f1b2d;margin-top:4px">
+                            @_totalBalance.ToString("N2")
+                        </MudText>
+                    </div>
+                    <MudAvatar Style="background:rgba(79,142,247,0.12);color:#4f8ef7" Size="Size.Large">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" />
+                    </MudAvatar>
+                </MudStack>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Elevation="1" Class="pa-5" Style="border-radius:12px">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                    <div>
+                        <MudText Typo="Typo.caption" Style="color:#6b7280;text-transform:uppercase;letter-spacing:.5px;font-weight:600">
+                            Active Accounts
+                        </MudText>
+                        <MudText Typo="Typo.h5" Style="font-weight:700;color:#0f1b2d;margin-top:4px">
+                            @_activeAccounts
+                        </MudText>
+                    </div>
+                    <MudAvatar Style="background:rgba(56,161,105,0.12);color:#38a169" Size="Size.Large">
+                        <MudIcon Icon="@Icons.Material.Filled.CreditCard" />
+                    </MudAvatar>
+                </MudStack>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard Elevation="1" Class="pa-5" Style="border-radius:12px">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                    <div>
+                        <MudText Typo="Typo.caption" Style="color:#6b7280;text-transform:uppercase;letter-spacing:.5px;font-weight:600">
+                            Total Transactions
+                        </MudText>
+                        <MudText Typo="Typo.h5" Style="font-weight:700;color:#0f1b2d;margin-top:4px">
+                            @_totalTransactions
+                        </MudText>
+                    </div>
+                    <MudAvatar Style="background:rgba(214,158,46,0.12);color:#d69e2e" Size="Size.Large">
+                        <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" />
+                    </MudAvatar>
+                </MudStack>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <MudText Typo="Typo.h6" Class="mb-3" Style="font-weight:600;color:#0f1b2d">Recent Transactions</MudText>
+
+    <MudCard Elevation="1" Style="border-radius:12px;overflow:hidden">
+        <MudTable Items="_recentTransactions" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Date</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Category</MudTh>
+                <MudTh>Account</MudTh>
+                <MudTh Style="text-align:right">Amount</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Date">
+                    <MudText Typo="Typo.body2" Style="color:#374151">
+                        @context.TransactionDate.ToString("dd MMM yyyy")
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Description">
+                    <MudText Typo="Typo.body2">@context.Description</MudText>
+                </MudTd>
+                <MudTd DataLabel="Category">
+                    <MudChip T="string" Size="Size.Small"
+                             Style="@($"background:{context.CategoryColor}22;color:{context.CategoryColor};font-size:.75rem;height:22px")">
+                        @context.CategoryName
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Account">
+                    <MudText Typo="Typo.body2" Style="color:#6b7280">@context.BankAccountName</MudText>
+                </MudTd>
+                <MudTd DataLabel="Amount" Style="text-align:right">
+                    <MudText Typo="Typo.body2"
+                             Style="@(context.TransactionType == "Income" ? "color:#38a169;font-weight:600" : "color:#e53e3e;font-weight:600")">
+                        @(context.TransactionType == "Income" ? "+" : "-")@context.CurrencySymbol@context.Amount.ToString("N2")
+                    </MudText>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Class="pa-6" Style="color:#9ca3af;text-align:center">No transactions yet.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+        @if (_recentTransactions.Count > 0)
+        {
+            <div class="pa-3 d-flex justify-end" style="border-top:1px solid #f3f4f6">
+                <MudButton Href="/transactions" Variant="Variant.Text" Color="Color.Primary" Size="Size.Small">
+                    View all transactions
+                </MudButton>
+            </div>
+        }
+    </MudCard>
+}
+
+@code {
+    bool _loading = true;
+    bool _error;
+    decimal _totalBalance;
+    int _activeAccounts;
+    int _totalTransactions;
+    IReadOnlyList<TransactionViewModel> _recentTransactions = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var accountsTask = AccountClient.GetAsync();
+            var txTask = TransactionClient.GetAsync(page: 1, pageSize: 5);
+            await Task.WhenAll(accountsTask, txTask);
+
+            var accounts = await accountsTask;
+            var txPage = await txTask;
+
+            if (accounts is not null)
+            {
+                _totalBalance = accounts.Where(a => a.Active).Sum(a => a.Balance);
+                _activeAccounts = accounts.Count(a => a.Active);
+            }
+
+            if (txPage is not null)
+            {
+                _recentTransactions = txPage.Items;
+                _totalTransactions = txPage.TotalCount;
+            }
+        }
+        catch
+        {
+            _error = true;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

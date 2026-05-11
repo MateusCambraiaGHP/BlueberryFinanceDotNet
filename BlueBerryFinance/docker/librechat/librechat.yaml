@@ -1,0 +1,35 @@
+version: 1.1.4
+cache: false
+
+interface:
+  appTitle: "BlueberryFinance"
+  endpointsMenu: true
+  modelSelect: false
+  parameters: false
+  sidePanel: true
+  presets: false
+
+endpoints:
+  openAI:
+    apiKey: "${OPENAI_API_KEY}"
+    baseURL: "${OPENAI_REVERSE_PROXY}"
+    models:
+      default:
+        - "gpt-4.1-mini"
+      fetch: false
+    titleConvo: true
+    titleModel: "gpt-4.1-mini"
+    modelDisplayLabel: "OpenAI"
+
+  custom:
+    - name: "Blueberry Financial Assistant"
+      apiKey: "sk-blueberry-librechat-dev"
+      baseURL: "http://host.docker.internal:5109"
+      models:
+        default:
+          - "blueberry-financial-assistant"
+        fetch: false
+      titleConvo: true
+      titleModel: "blueberry-financial-assistant"
+      modelDisplayLabel: "Blueberry AI"
+      streamRate: 1

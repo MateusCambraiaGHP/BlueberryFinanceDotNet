@@ -1,9 +1,3 @@
-﻿namespace BlueBerryFinance.API.Data.Entities.enums
-{
-    public enum Currency
-    {
-        None = 0,
-        Real = 1,
-        Euro = 2,
-    }
-}
+// Currency is now a proper entity table — see Data/Entities/Currency.cs
+// CurrencyCode enum is in Data/Entities/Enums/CurrencyCode.cs
+// This file intentionally left empty.

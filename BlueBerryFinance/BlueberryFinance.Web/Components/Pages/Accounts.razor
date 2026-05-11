@@ -1,0 +1,238 @@
+@page "/accounts"
+@inject BankAccountClient AccountClient
+@inject CurrencyClient CurrencyClient
+
+<PageTitle>Accounts — Blueberry Finance</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-6">
+    <MudText Typo="Typo.h5" Style="font-weight:700;color:#0f1b2d">Accounts</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="@(() => _showForm = !_showForm)" Style="border-radius:8px">
+        Add Account
+    </MudButton>
+</MudStack>
+
+@if (_error is not null)
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">
+        @_error
+    </MudAlert>
+}
+
+@if (_showForm)
+{
+    <MudCard Elevation="1" Class="mb-6 pa-5" Style="border-radius:12px;border-left:4px solid #4f8ef7">
+        <MudText Typo="Typo.subtitle1" Style="font-weight:600;color:#0f1b2d;margin-bottom:16px">New Bank Account</MudText>
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="_form.Name" Label="Account Name" Variant="Variant.Outlined"
+                              Placeholder="e.g. Nubank Main" Required="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect @bind-Value="_form.Country" Label="Country" Variant="Variant.Outlined" Required="true">
+                    <MudSelectItem Value="1">Brazil</MudSelectItem>
+                    <MudSelectItem Value="2">Portugal</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect @bind-Value="_form.Bank" Label="Bank" Variant="Variant.Outlined" Required="true">
+                    @foreach (var b in BanksFor(_form.Country))
+                    {
+                        <MudSelectItem Value="@b.Value">@b.Label</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect @bind-Value="_form.CurrencyId" Label="Currency" Variant="Variant.Outlined" Required="true">
+                    @foreach (var c in _currencies)
+                    {
+                        <MudSelectItem Value="@c.Id">@c.Symbol — @c.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudNumericField @bind-Value="_form.InitialBalance" Label="Initial Balance" Variant="Variant.Outlined"
+                                 Format="N2" Min="0m" />
+            </MudItem>
+        </MudGrid>
+        <MudStack Row="true" Class="mt-4" Spacing="2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitFormAsync"
+                       Disabled="_saving" Style="border-radius:8px">
+                @(_saving ? "Saving…" : "Save Account")
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="@(() => { _showForm = false; ResetForm(); })">
+                Cancel
+            </MudButton>
+        </MudStack>
+    </MudCard>
+}
+
+@if (_loading)
+{
+    <MudGrid>
+        @for (int i = 0; i < 3; i++)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="130px" Class="rounded-lg" />
+            </MudItem>
+        }
+    </MudGrid>
+}
+else if (_accounts.Count == 0)
+{
+    <MudCard Elevation="1" Style="border-radius:12px;padding:48px 32px;text-align:center">
+        <MudAvatar Style="background:rgba(79,142,247,0.1);color:#4f8ef7;width:56px;height:56px;margin:0 auto 16px" Size="Size.Large">
+            <MudIcon Icon="@Icons.Material.Filled.AccountBalance" />
+        </MudAvatar>
+        <MudText Typo="Typo.body1" Style="font-weight:600;color:#374151">No accounts yet</MudText>
+        <MudText Typo="Typo.body2" Style="color:#9ca3af;margin-top:4px">Add your first bank account to get started.</MudText>
+    </MudCard>
+}
+else
+{
+    <MudGrid>
+        @foreach (var account in _accounts)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="1" Class="pa-5" Style="border-radius:12px;height:100%">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudAvatar Size="Size.Small"
+                                       Style="@($"background:{CountryColor(account.Country)}22;color:{CountryColor(account.Country)}")">
+                                <MudIcon Icon="@Icons.Material.Filled.AccountBalance" />
+                            </MudAvatar>
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Style="font-weight:600;color:#0f1b2d">@account.Name</MudText>
+                                <MudText Typo="Typo.caption" Style="color:#6b7280">@account.Bank · @account.Country</MudText>
+                            </div>
+                        </MudStack>
+                        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small"
+                                       Color="Color.Error" aria-label="Delete account"
+                                       OnClick="@(() => DeleteAsync(account.Id))" />
+                    </MudStack>
+                    <MudDivider Class="mb-3" />
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                        <MudText Typo="Typo.caption" Style="color:#6b7280;text-transform:uppercase;letter-spacing:.4px;font-weight:600">
+                            Balance
+                        </MudText>
+                        <MudText Typo="Typo.h6"
+                                 Style="@($"font-weight:700;color:{(account.Balance >= 0 ? "#38a169" : "#e53e3e")}")">
+                            @account.CurrencySymbol@account.Balance.ToString("N2")
+                        </MudText>
+                    </MudStack>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+
+    <MudCard Elevation="0" Class="mt-4 pa-4" Style="border-radius:12px;background:#f4f6f9">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+            <MudText Typo="Typo.body2" Style="color:#6b7280;font-weight:600">@_accounts.Count account(s)</MudText>
+        </MudStack>
+    </MudCard>
+}
+
+@code {
+    bool _loading = true;
+    bool _showForm;
+    bool _saving;
+    string? _error;
+
+    IReadOnlyList<BankAccountViewModel> _accounts = [];
+    IReadOnlyList<CurrencyViewModel> _currencies = [];
+
+    AccountForm _form = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var accountsTask = AccountClient.GetAsync();
+            var currenciesTask = CurrencyClient.GetAsync();
+            await Task.WhenAll(accountsTask, currenciesTask);
+
+            _accounts = await accountsTask ?? [];
+            _currencies = await currenciesTask ?? [];
+
+            if (_currencies.Count > 0)
+                _form.CurrencyId = _currencies[0].Id;
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load accounts: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SubmitFormAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_form.Name) || _form.CurrencyId == Guid.Empty) return;
+
+        _saving = true;
+        _error = null;
+        try
+        {
+            await AccountClient.CreateAsync(new
+            {
+                name = _form.Name,
+                bank = _form.Bank,
+                country = _form.Country,
+                currencyId = _form.CurrencyId,
+                initialBalance = _form.InitialBalance
+            });
+
+            _showForm = false;
+            ResetForm();
+            _accounts = await AccountClient.GetAsync() ?? [];
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to save account: {ex.Message}";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        _error = null;
+        try
+        {
+            await AccountClient.DeleteAsync(id);
+            _accounts = await AccountClient.GetAsync() ?? [];
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to delete account: {ex.Message}";
+        }
+    }
+
+    private void ResetForm()
+    {
+        _form = new AccountForm();
+        if (_currencies.Count > 0)
+            _form.CurrencyId = _currencies[0].Id;
+    }
+
+    private static string CountryColor(string country) =>
+        country == "Brazil" ? "#38a169" : "#4f8ef7";
+
+    private static IEnumerable<(int Value, string Label)> BanksFor(int country) =>
+        country == 1
+            ? [(0, "Other"), (1, "Nubank"), (2, "Itaú"), (3, "Bradesco"), (4, "Banco do Brasil"), (5, "Santander"), (6, "Caixa"), (7, "Inter")]
+            : [(0, "Other"), (100, "CGD"), (101, "BPI"), (102, "Millennium BCP"), (103, "Santander"), (104, "Novo Banco"), (105, "ActivoBank")];
+
+    class AccountForm
+    {
+        public string Name { get; set; } = string.Empty;
+        public int Country { get; set; } = 1;
+        public int Bank { get; set; } = 0;
+        public Guid CurrencyId { get; set; }
+        public decimal InitialBalance { get; set; }
+    }
+}

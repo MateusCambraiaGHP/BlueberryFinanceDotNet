@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(dotnet list:*)",
+      "Bash(xargs grep:*)",
+      "Bash(ls:*)",
+      "Bash(docker exec:*)",
+      "Bash(findstr \"LIBRECHAT_SERVICE_JWT\")",
+      "Bash(grep -E \"\\\\.cs$\")",
+      "Bash(grep \"\\\\.cs$\")",
+      "Bash(dotnet nuget:*)",
+      "Read(//c/WorkDir/BlueberryFinanceDotNet/BlueBerryFinance/$USERPROFILE/.nuget/packages/**)",
+      "Bash(taskkill /PID 34708 /F)",
+      "Bash(cmd //c \"taskkill /PID 34708 /F\")",
+      "Bash(PGPASSWORD=ChangeMe123! psql -h localhost -p 5432 -U blueberry -d blueberry_finance -t -c \"SELECT id FROM users WHERE email='mateus@hotmail.com' LIMIT 1;\")"
+    ]
+  }
+}

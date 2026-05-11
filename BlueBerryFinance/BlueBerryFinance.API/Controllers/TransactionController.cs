@@ -1,39 +1,79 @@
-﻿using BlueBerryFinance.API.Application.Handlers.Interfaces;
-using BlueBerryFinance.API.Application.Requests;
+using BlueBerryFinance.API.Application.Features.Transaction;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Transactions;
 
 namespace BlueBerryFinance.API.Controllers
 {
-    [Route("transaction/")]
-    public class TransactionController : Controller
+    [Route("transaction")]
+    [Authorize]
+    public class TransactionController : BaseController
     {
-        private readonly ITransactionsHandler _handler;
+        private readonly ITransactionHandler _handler;
 
-        public TransactionController(ITransactionsHandler handler)
+        public TransactionController(ITransactionHandler handler)
         {
             _handler = handler;
         }
 
         [HttpGet]
-        public ActionResult<List<Transaction>> Get()
+        public async Task<IActionResult> Get([FromQuery] ListTransactionsRequest request)
         {
-            return new List<Transaction>();
+            try
+            {
+                var result = await _handler.GetAsync(request, CurrentUserId);
+
+                if (request.Id.HasValue && result.TotalCount == 0)
+                    return NotFound();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex);
+            }
         }
 
-        [HttpPost("analyze")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Analyze(
-        [FromBody] FinancialAnalysisRequest request,
-        CancellationToken cancellationToken)
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] RegisterTransactionRequest request)
         {
-            var result = await _handler.HandleAsync(request, cancellationToken);
+            try
+            {
+                var result = await _handler.RegisterAsync(request, CurrentUserId);
+                return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex);
+            }
+        }
 
-            if (result is null)
-                return BadRequest("Failed to process the request");
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTransactionRequest request)
+        {
+            try
+            {
+                request.Id = id;
+                var result = await _handler.UpdateAsync(request, CurrentUserId);
+                return result is null ? NotFound() : Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex);
+            }
+        }
 
-            return Ok(result);
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            try
+            {
+                var deleted = await _handler.DeleteAsync(id, CurrentUserId);
+                return deleted ? NoContent() : NotFound();
+            }
+            catch (Exception ex)
+            {
+                return HandleException(ex);
+            }
         }
     }
 }

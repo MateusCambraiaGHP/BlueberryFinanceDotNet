@@ -1,0 +1,144 @@
+@page "/transactions/import"
+@inject CsvImportClient ImportClient
+@inject BankAccountClient AccountClient
+@inject NavigationManager Nav
+
+<PageTitle>Import CSV — Blueberry Finance</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-6" Spacing="2">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small"
+                   OnClick='@(() => Nav.NavigateTo("/transactions"))' />
+    <MudText Typo="Typo.h5" Style="font-weight:700;color:#0f1b2d">Import Bank Statement</MudText>
+</MudStack>
+
+@if (_error is not null)
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="@(() => _error = null)">
+        @_error
+    </MudAlert>
+}
+
+@if (_result is not null)
+{
+    <MudAlert Severity="@(_result.Errors > 0 ? Severity.Warning : Severity.Success)" Class="mb-4">
+        <strong>Import complete:</strong>
+        @_result.Imported imported · @_result.Skipped skipped (duplicates) · @_result.Errors errors
+    </MudAlert>
+
+    @if (_result.ErrorMessages.Count > 0)
+    {
+        <MudCard Elevation="0" Class="mb-4 pa-4" Style="border-radius:8px;background:#fff8f0">
+            <MudText Typo="Typo.caption" Style="font-weight:600;color:#c05621">Row errors:</MudText>
+            @foreach (var msg in _result.ErrorMessages)
+            {
+                <MudText Typo="Typo.caption" Style="color:#744210;display:block">@msg</MudText>
+            }
+        </MudCard>
+    }
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Style="border-radius:8px"
+               OnClick="Reset">Import Another File</MudButton>
+}
+else
+{
+    <MudCard Elevation="1" Class="pa-6" Style="border-radius:12px;max-width:560px">
+        <MudText Typo="Typo.subtitle1" Style="font-weight:600;color:#0f1b2d;margin-bottom:4px">
+            Upload a CSV file
+        </MudText>
+        <MudText Typo="Typo.body2" Style="color:#6b7280;margin-bottom:24px">
+            Supports ActivoBank, CGD, BPI, Millennium BCP — exported as CSV from your online banking.
+            Duplicate transactions are detected automatically.
+        </MudText>
+
+        <MudSelect @bind-Value="_bankAccountId" Label="Bank Account" Variant="Variant.Outlined"
+                   Class="mb-5" Required="true" Disabled="_loading">
+            @foreach (var a in _accounts)
+            {
+                <MudSelectItem Value="@a.Id">@a.Name (@a.Bank · @a.Country)</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudFileUpload T="IBrowserFile" FilesChanged="OnFileSelected" Accept=".csv" MaximumFileCount="1">
+            <ActivatorContent>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile"
+                           Style="border-radius:8px;width:100%" Disabled="_loading">
+                    @(_file is null ? "Choose CSV file" : _file.Name)
+                </MudButton>
+            </ActivatorContent>
+        </MudFileUpload>
+
+        @if (_file is not null)
+        {
+            <MudText Typo="Typo.caption" Style="color:#6b7280;margin-top:6px">
+                @_file.Name · @(_file.Size / 1024) KB
+            </MudText>
+        }
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-5"
+                   Style="border-radius:8px;width:100%"
+                   OnClick="SubmitAsync"
+                   Disabled="@(_file is null || _bankAccountId == Guid.Empty || _importing)">
+            @(_importing ? "Importing…" : "Import Transactions")
+        </MudButton>
+    </MudCard>
+}
+
+@code {
+    bool _loading = true;
+    bool _importing;
+    string? _error;
+
+    Guid _bankAccountId;
+    IBrowserFile? _file;
+    CsvImportResultViewModel? _result;
+
+    IReadOnlyList<BankAccountViewModel> _accounts = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _accounts = await AccountClient.GetAsync() ?? [];
+            if (_accounts.Count > 0)
+                _bankAccountId = _accounts[0].Id;
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load accounts: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void OnFileSelected(IBrowserFile file) => _file = file;
+
+    private async Task SubmitAsync()
+    {
+        if (_file is null || _bankAccountId == Guid.Empty) return;
+
+        _importing = true;
+        _error = null;
+        try
+        {
+            await using var stream = _file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            _result = await ImportClient.ImportAsync(_bankAccountId, stream, _file.Name);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Import failed: {ex.Message}";
+        }
+        finally
+        {
+            _importing = false;
+        }
+    }
+
+    private void Reset()
+    {
+        _file = null;
+        _result = null;
+        _error = null;
+    }
+}
