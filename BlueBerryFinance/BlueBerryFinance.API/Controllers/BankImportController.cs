@@ -4,14 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlueBerryFinance.API.Controllers
 {
-    [Route("api/v1.0/csv-import")]
+    [Route("api/v1.0/bank-import")]
     [Authorize]
-    public class CsvImportController : BaseController
+    public class BankImportController : BaseController
     {
-        private readonly ICsvImportHandler _handler;
-        private readonly ILogger<CsvImportController> _logger;
+        private readonly IBankImportHandler _handler;
+        private readonly ILogger<BankImportController> _logger;
 
-        public CsvImportController(ICsvImportHandler handler, ILogger<CsvImportController> logger)
+        public BankImportController(IBankImportHandler handler, ILogger<BankImportController> logger)
         {
             _handler = handler;
             _logger = logger;

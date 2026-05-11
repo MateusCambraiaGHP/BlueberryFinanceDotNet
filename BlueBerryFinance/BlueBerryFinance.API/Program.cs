@@ -142,7 +142,7 @@ try
     builder.Services.AddScoped<IFixedExpenseHandler, FixedExpenseHandler>();
     builder.Services.AddScoped<ICurrencyHandler, CurrencyHandler>();
     builder.Services.AddScoped<IReportHandler, ReportHandler>();
-    builder.Services.AddScoped<ICsvImportHandler, CsvImportHandler>();
+    builder.Services.AddScoped<IBankImportHandler, BankImportHandler>();
 
     // ── Messaging ─────────────────────────────────────────────────────────────
     builder.Services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();

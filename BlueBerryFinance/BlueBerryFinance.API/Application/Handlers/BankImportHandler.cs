@@ -8,16 +8,16 @@ using System.Globalization;
 
 namespace BlueBerryFinance.API.Application.Handlers
 {
-    public class CsvImportHandler : ICsvImportHandler
+    public class BankImportHandler : IBankImportHandler
     {
         private readonly AppDbContext _db;
-        private readonly ILogger<CsvImportHandler> _logger;
+        private readonly ILogger<BankImportHandler> _logger;
 
         // Supported date formats from Portuguese banks
         private static readonly string[] _dateFormats =
             ["dd-MM-yyyy", "dd/MM/yyyy", "yyyy-MM-dd", "dd.MM.yyyy"];
 
-        public CsvImportHandler(AppDbContext db, ILogger<CsvImportHandler> logger)
+        public BankImportHandler(AppDbContext db, ILogger<BankImportHandler> logger)
         {
             _db = db;
             _logger = logger;

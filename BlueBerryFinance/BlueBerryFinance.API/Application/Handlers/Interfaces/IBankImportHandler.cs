@@ -2,7 +2,7 @@ using BlueBerryFinance.Common.ViewModels;
 
 namespace BlueBerryFinance.API.Application.Handlers.Interfaces
 {
-    public interface ICsvImportHandler
+    public interface IBankImportHandler
     {
         /// <summary>
         /// Parses a bank CSV export and saves new transactions to the database.
