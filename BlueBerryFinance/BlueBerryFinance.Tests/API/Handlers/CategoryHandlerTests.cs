@@ -51,7 +51,7 @@ namespace BlueBerryFinance.Tests.API.Handlers
             await db.SaveChangesAsync();
 
             var handler = new CategoryHandler(db);
-            var result = await handler.ListAsync();
+            var result = await handler.GetAsync(new CategoryFilterRequest());
 
             result.Should().HaveCount(1);
             result[0].Name.Should().Be("Rent");
@@ -75,8 +75,8 @@ namespace BlueBerryFinance.Tests.API.Handlers
             var deleted = await handler.DeleteAsync(created.Id);
             deleted.Should().BeTrue();
 
-            var found = await handler.GetByIdAsync(created.Id);
-            found.Should().BeNull(); // soft deleted, filtered by global query filter
+            var found = await handler.GetAsync(new CategoryFilterRequest { Id = created.Id });
+            found.Should().BeEmpty(); // soft deleted, filtered by global query filter
         }
 
         [Fact]
