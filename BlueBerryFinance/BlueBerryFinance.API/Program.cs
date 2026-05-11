@@ -117,6 +117,7 @@ try
     builder.Services.AddSingleton<IPromptLoader, PromptLoader>();
     builder.Services.AddSingleton<IAIAgentFactory, AIAgentFactory>();
     builder.Services.AddScoped<IJwtService, JwtService>();
+    builder.Services.AddScoped<LoginMiddleware>();
     builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("Minio"));
     builder.Services.AddScoped<IMinioService, MinioService>();
 
@@ -211,6 +212,7 @@ try
         await next();
     });
 
+    app.UseMiddleware<LoginMiddleware>();
     app.UseAuthentication();
     app.UseAuthorization();
 
