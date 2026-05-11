@@ -18,14 +18,11 @@ namespace BlueBerryFinance.API.Controllers
 
         [HttpGet("report/monthly")]
         public async Task<IActionResult> GetMonthly(
-            [FromQuery] int year, [FromQuery] int month, CancellationToken ct)
+            [FromQuery] GetMonthlyReportRequest request, CancellationToken ct)
         {
-            if (year < 2000 || year > 2100 || month < 1 || month > 12)
-                return BadRequest(new { message = "Invalid year or month." });
-
             try
             {
-                var result = await _handler.GetMonthlyAsync(year, month, CurrentUserId, ct);
+                var result = await _handler.GetMonthlyAsync(request.Year, request.Month, CurrentUserId, ct);
                 return Ok(result);
             }
             catch (Exception ex)
