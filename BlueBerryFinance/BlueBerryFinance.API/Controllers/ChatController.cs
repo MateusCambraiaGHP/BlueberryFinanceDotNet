@@ -1,10 +1,8 @@
 using BlueBerryFinance.API.Application.Handlers.Interfaces;
 using BlueBerryFinance.API.Application.Requests;
-using BlueBerryFinance.API.Application.Requests.Chat;
 using BlueBerryFinance.API.Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -15,7 +13,6 @@ namespace BlueBerryFinance.API.Controllers
     {
         private readonly IChatHandler _chatHandler;
         private readonly IMinioService _minio;
-        private readonly IConfiguration _config;
         private readonly ILogger<ChatController> _logger;
 
         private static readonly JsonSerializerOptions _jsonOptions = new()
@@ -30,19 +27,13 @@ namespace BlueBerryFinance.API.Controllers
         public ChatController(
             IChatHandler chatHandler,
             IMinioService minio,
-            IConfiguration config,
             ILogger<ChatController> logger)
         {
             _chatHandler = chatHandler;
             _minio = minio;
-            _config = config;
             _logger = logger;
         }
 
-        /// <summary>
-        /// Uploads an image to MinIO and returns its public URL.
-        /// The URL can then be included in a chat message so the agent can call analyze_image.
-        /// </summary>
         [HttpPost("chat/upload-image")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -102,136 +93,6 @@ namespace BlueBerryFinance.API.Controllers
                     await Response.Body.FlushAsync(ct);
                 }
             }
-        }
-
-        /// <summary>
-        /// OpenAI-compatible streaming completions endpoint consumed by LibreChat.
-        /// Authenticated via static service key (Bearer token) — no user JWT required.
-        /// Write tools are disabled; read-only conversational responses only.
-        /// </summary>
-        [AllowAnonymous]
-        [HttpGet("/v1/models")]
-        [HttpGet("/models")]
-        public IActionResult GetModels()
-        {
-            return Ok(new
-            {
-                @object = "list",
-                data = new[]
-                {
-                    new { id = "blueberry-financial-assistant", @object = "model", owned_by = "blueberry" }
-                }
-            });
-        }
-
-        [AllowAnonymous]
-        [HttpPost("chat/completions")]
-        [HttpPost("v1/chat/completions")]
-        [HttpPost("/chat/completions")]
-        [HttpPost("/v1/chat/completions")]
-        public async Task ChatCompletions([FromBody] OpenAIChatCompletionsRequest request, CancellationToken ct)
-        {
-            if (!ValidateServiceKey())
-            {
-                Response.StatusCode = 401;
-                return;
-            }
-
-            // Resolve user: prefer request.User (GUID), fall back to configured default
-            Guid userId = Guid.Empty;
-            if (!string.IsNullOrWhiteSpace(request.User) && Guid.TryParse(request.User, out var requestUserId))
-                userId = requestUserId;
-            else
-            {
-                var defaultId = _config["LibreChat:DefaultUserId"];
-                if (!string.IsNullOrWhiteSpace(defaultId))
-                    Guid.TryParse(defaultId, out userId);
-            }
-
-            if (userId == Guid.Empty)
-            {
-                Response.StatusCode = 400;
-                await Response.WriteAsync("LibreChat:DefaultUserId is not configured.");
-                return;
-            }
-
-            // Inject userId as a claim so tools can resolve the current user
-            var identity = new ClaimsIdentity("LibreChat");
-            identity.AddClaim(new Claim("userId", userId.ToString()));
-            HttpContext.User = new ClaimsPrincipal(identity);
-
-            Response.Headers["Content-Type"] = "text/event-stream";
-            Response.Headers["Cache-Control"] = "no-cache";
-            Response.Headers["X-Accel-Buffering"] = "no";
-
-            var prompt = request.Messages
-                .LastOrDefault(m => string.Equals(m.Role, "user", StringComparison.OrdinalIgnoreCase))
-                ?.Content ?? string.Empty;
-
-            var completionId = $"chatcmpl-{Guid.NewGuid():N}";
-            var created = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
-            try
-            {
-                await foreach (var chunk in _chatHandler.StreamAsync(prompt, includeTools: true, ct))
-                {
-                    var data = JsonSerializer.Serialize(new
-                    {
-                        id = completionId,
-                        @object = "chat.completion.chunk",
-                        created,
-                        model = request.Model,
-                        choices = new[]
-                        {
-                            new
-                            {
-                                index = 0,
-                                delta = new { content = chunk },
-                                finish_reason = (string?)null
-                            }
-                        }
-                    }, _jsonOptions);
-
-                    await Response.WriteAsync($"data: {data}\n\n", ct);
-                    await Response.Body.FlushAsync(ct);
-                }
-
-                // Final chunk
-                var done = JsonSerializer.Serialize(new
-                {
-                    id = completionId,
-                    @object = "chat.completion.chunk",
-                    created,
-                    model = request.Model,
-                    choices = new[]
-                    {
-                        new
-                        {
-                            index = 0,
-                            delta = new { },
-                            finish_reason = "stop"
-                        }
-                    }
-                }, _jsonOptions);
-
-                await Response.WriteAsync($"data: {done}\n\n", ct);
-                await Response.WriteAsync("data: [DONE]\n\n", ct);
-                await Response.Body.FlushAsync(ct);
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during LibreChat completions stream");
-            }
-        }
-
-        private bool ValidateServiceKey()
-        {
-            var serviceKey = _config["LibreChat:ServiceApiKey"];
-            if (string.IsNullOrWhiteSpace(serviceKey)) return false;
-
-            var authHeader = Request.Headers.Authorization.FirstOrDefault();
-            return authHeader == $"Bearer {serviceKey}";
         }
     }
 }
