@@ -1,4 +1,3 @@
-using BlueBerryFinance.API.Application.Features.Transaction;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.Common.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -14,12 +13,15 @@ namespace BlueBerryFinance.API.Application.Features.Transaction
             _db = db;
         }
 
-        public async Task<PagedResult<TransactionViewModel>> ListAsync(
+        public async Task<PagedResult<TransactionViewModel>> GetAsync(
             ListTransactionsRequest request, Guid userId, CancellationToken ct = default)
         {
             var query = _db.Transactions
                 .AsNoTracking()
                 .Where(t => t.UserId == userId);
+
+            if (request.Id.HasValue)
+                query = query.Where(t => t.Id == request.Id.Value);
 
             if (request.BankAccountId.HasValue)
                 query = query.Where(t => t.BankAccountId == request.BankAccountId.Value);
@@ -74,46 +76,6 @@ namespace BlueBerryFinance.API.Application.Features.Transaction
             };
         }
 
-        public async Task<TransactionViewModel?> GetByIdAsync(Guid id, Guid userId, CancellationToken ct = default)
-        {
-            return await _db.Transactions
-                .AsNoTracking()
-                .Include(t => t.Items)
-                .Where(t => t.Id == id && t.UserId == userId)
-                .Select(t => new TransactionViewModel
-                {
-                    Id = t.Id,
-                    UserId = t.UserId,
-                    BankAccountId = t.BankAccountId,
-                    BankAccountName = t.BankAccount.Name,
-                    StoreId = t.StoreId,
-                    StoreName = t.Store.Name,
-                    CategoryId = t.CategoryId,
-                    CategoryName = t.Category.Name,
-                    CategoryColor = t.Category.Color,
-                    CurrencyCode = t.Currency.Code.ToString(),
-                    CurrencySymbol = t.Currency.Symbol,
-                    TransactionType = t.TransactionType.ToString(),
-                    Source = t.Source.ToString(),
-                    Amount = t.Amount,
-                    Description = t.Description,
-                    TransactionDate = t.TransactionDate,
-                    ImageUrl = t.ImageUrl,
-                    CorrelationId = t.CorrelationId,
-                    InsertionDate = t.InsertionDate,
-                    Items = t.Items.Select(i => new TransactionItemViewModel
-                    {
-                        Id = i.Id,
-                        TransactionId = i.TransactionId,
-                        Name = i.Name,
-                        Quantity = i.Quantity,
-                        UnitPrice = i.UnitPrice,
-                        TotalPrice = i.TotalPrice
-                    }).ToList()
-                })
-                .FirstOrDefaultAsync(ct);
-        }
-
         public async Task<TransactionViewModel> RegisterAsync(
             RegisterTransactionRequest request, Guid userId, CancellationToken ct = default)
         {
@@ -157,7 +119,7 @@ namespace BlueBerryFinance.API.Application.Features.Transaction
                 throw new InvalidOperationException("Failed to register transaction.", ex);
             }
 
-            return (await GetByIdAsync(entity.Id, userId, ct))!;
+            return (await GetAsync(new ListTransactionsRequest { Id = entity.Id }, userId, ct)).Items.First();
         }
 
         public async Task<TransactionViewModel?> UpdateAsync(
@@ -198,7 +160,7 @@ namespace BlueBerryFinance.API.Application.Features.Transaction
                 throw new InvalidOperationException("Failed to update transaction.", ex);
             }
 
-            return await GetByIdAsync(entity.Id, userId, ct);
+            return (await GetAsync(new ListTransactionsRequest { Id = entity.Id }, userId, ct)).Items.FirstOrDefault();
         }
 
         public async Task<bool> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)

@@ -19,28 +19,17 @@ namespace BlueBerryFinance.API.Controllers
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> List([FromQuery] ListTransactionsRequest request, CancellationToken ct)
-        {
-            try
-            {
-                var result = await _handler.ListAsync(request, CurrentUserId, ct);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return HandleException(ex, _logger);
-            }
-        }
-
-        [HttpGet("{id:guid}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
+        public async Task<IActionResult> Get([FromQuery] ListTransactionsRequest request, CancellationToken ct)
         {
             try
             {
-                var result = await _handler.GetByIdAsync(id, CurrentUserId, ct);
-                return result is null ? NotFound() : Ok(result);
+                var result = await _handler.GetAsync(request, CurrentUserId, ct);
+
+                if (request.Id.HasValue && result.TotalCount == 0)
+                    return NotFound();
+
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -56,7 +45,7 @@ namespace BlueBerryFinance.API.Controllers
             try
             {
                 var result = await _handler.RegisterAsync(request, CurrentUserId, ct);
-                return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+                return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
             }
             catch (Exception ex)
             {
