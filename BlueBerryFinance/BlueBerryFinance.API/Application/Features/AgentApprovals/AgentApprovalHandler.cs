@@ -1,5 +1,4 @@
 using BlueBerryFinance.API.Application.Features.Common;
-using BlueBerryFinance.API.Application.Features.Transaction;
 using BlueBerryFinance.API.Application.Features.Transactions;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.API.Domain.Entities;
@@ -132,10 +131,12 @@ namespace BlueBerryFinance.API.Application.Features.AgentApprovals
                     : DateTime.SpecifyKind(payload.TransactionDate, DateTimeKind.Utc)
             };
 
-            var transaction = await _transactionHandler.RegisterAsync(req, userId);
+            var transaction = await _transactionHandler.CreateAsync(req, userId);
 
-            if (payload.Items?.Count > 0)
-                await SaveTransactionItemsAsync(transaction.Id, payload.Items);
+            if (payload.Items?.Count > 0 && transaction.Data != null)
+            {
+                await SaveTransactionItemsAsync(transaction.Data.First().Id, payload.Items);
+            }
         }
 
         private async Task SaveTransactionItemsAsync(Guid transactionId, IEnumerable<TransactionItemPayload> items)
@@ -193,7 +194,7 @@ namespace BlueBerryFinance.API.Application.Features.AgentApprovals
                     TransactionDate = DateTime.SpecifyKind(date, DateTimeKind.Utc)
                 };
 
-                await _transactionHandler.RegisterAsync(req, userId);
+                await _transactionHandler.CreateAsync(req, userId);
             }
         }
 

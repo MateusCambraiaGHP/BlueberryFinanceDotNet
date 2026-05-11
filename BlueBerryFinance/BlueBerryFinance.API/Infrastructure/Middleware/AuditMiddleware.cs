@@ -1,5 +1,5 @@
 using BlueBerryFinance.API.Data.Context;
-using BlueBerryFinance.API.Data.Entities;
+using BlueBerryFinance.API.Domain.Entities;
 using System.Diagnostics;
 using System.Security.Claims;
 using System.Text;

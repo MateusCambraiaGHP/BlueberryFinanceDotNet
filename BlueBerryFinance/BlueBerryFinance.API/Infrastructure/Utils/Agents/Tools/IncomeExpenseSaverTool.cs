@@ -1,5 +1,5 @@
 using BlueBerryFinance.API.Data.Context;
-using BlueBerryFinance.API.Data.Entities;
+using BlueBerryFinance.API.Domain.Entities;
 using BlueBerryFinance.API.Domain.Entities.Enums;
 using BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Interfaces;
 using BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools.Interfaces;
@@ -13,11 +13,6 @@ using static BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools.AgentWriteTo
 
 namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
 {
-    /// <summary>
-    /// Income/Expenses Saver Tool.
-    /// Classifies the transaction via ClassificationAgent, validates security via SecurityValidationAgent,
-    /// then queues a DB Save approval. Never accesses the database directly for business operations.
-    /// </summary>
     public class IncomeExpenseSaverTool : IIncomeExpenseSaverTool
     {
         private readonly AppDbContext _db;
@@ -65,7 +60,6 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
             var now = DateTime.UtcNow;
             var effectiveDate = transactionDate ?? now;
 
-            // Resolve bank account
             var accountQuery = _db.BankAccounts.Where(a => a.UserId == userId && a.Active == 1);
             if (!string.IsNullOrWhiteSpace(bankAccountName))
                 accountQuery = accountQuery.Where(a => a.Name.ToLower().Contains(bankAccountName.ToLower()));
@@ -74,7 +68,6 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
                 return "No matching bank account found. Please check the account name or create one first.";
             var bankAccountId = account.Id;
 
-            // Resolve currency (fall back to account's currency)
             Guid currencyId;
             if (!string.IsNullOrWhiteSpace(currencyCode))
             {
@@ -91,7 +84,6 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
                 currencyId = account.CurrencyId;
             }
 
-            // Resolve category
             Guid categoryId;
             var categoryQuery = _db.Categories.AsQueryable();
             if (!string.IsNullOrWhiteSpace(categoryName))
@@ -103,7 +95,6 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
                 return "No categories found. Please create at least one category first.";
             categoryId = category.Id;
 
-            // Resolve or create store
             var store = await _db.Stores.FirstOrDefaultAsync(s =>
                 s.Name.ToLower() == storeName.ToLower());
             if (store is null)
@@ -123,14 +114,12 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
 
             var effectiveDescription = string.IsNullOrWhiteSpace(description) ? storeName : description;
 
-            // Step 1: Classify
             var classificationPrompt = $"Classify this transaction: amount={amount}, description=\"{effectiveDescription}\", store=\"{storeName}\", date={effectiveDate:yyyy-MM-dd}";
             var classification = await _classifier.AskAsync(classificationPrompt);
 
             if (classification is null)
                 return "Classification failed. Please try again.";
 
-            // Step 2: Security validation (uses DB Query Tool internally)
             var validationPrompt = $"Validate: userId={userId}, bankAccountId={bankAccountId}, storeId={storeId}, " +
                                    $"categoryId={categoryId}, currencyId={currencyId}, amount={amount}, " +
                                    $"type={classification.Type}, originType={classification.OriginType}";
@@ -139,7 +128,6 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
             if (validation is null || !validation.IsValid)
                 return $"Security validation failed: {validation?.Reason ?? "Unknown reason"}. Transaction not queued.";
 
-            // Step 3: Queue for DB Save (approval required)
             var payload = new CreateTransactionPayload(
                 bankAccountId, storeId, categoryId, currencyId, null,
                 classification.OriginType, classification.Type, amount,
@@ -155,6 +143,7 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
                 Status = ApprovalStatus.Pending,
                 Active = 1
             };
+
             approval.SetInsertionDate(DateTime.UtcNow);
             approval.SetLastModification(DateTime.UtcNow);
 
@@ -187,6 +176,7 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
                 Status = ApprovalStatus.Pending,
                 Active = 1
             };
+
             approval.SetInsertionDate(DateTime.UtcNow);
             approval.SetLastModification(DateTime.UtcNow);
 

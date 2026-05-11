@@ -1,4 +1,3 @@
-using BlueBerryFinance.API.Application.Features.Auth;
 using BlueBerryFinance.API.Application.Features.Auths;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.API.Infrastructure.Models;
@@ -9,11 +8,6 @@ using System.Text.Json;
 
 namespace BlueBerryFinance.API.Infrastructure.Middleware
 {
-    /// <summary>
-    /// Intercepts POST /api/v1.0/auth/login before the controller pipeline.
-    /// Validates credentials, issues a JWT, and writes the LoginResponse directly.
-    /// All other requests pass through unchanged.
-    /// </summary>
     public class LoginMiddleware : IMiddleware
     {
         private const string LoginPath = "/api/v1.0/auth/login";

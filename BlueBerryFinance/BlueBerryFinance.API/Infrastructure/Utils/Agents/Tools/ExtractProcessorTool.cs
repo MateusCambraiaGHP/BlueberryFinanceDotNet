@@ -1,5 +1,5 @@
 using BlueBerryFinance.API.Data.Context;
-using BlueBerryFinance.API.Data.Entities;
+using BlueBerryFinance.API.Domain.Entities;
 using BlueBerryFinance.API.Domain.Entities.Enums;
 using BlueBerryFinance.API.Infrastructure.Services.Interfaces;
 using BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Interfaces;
@@ -12,11 +12,6 @@ using System.Text.Json.Serialization;
 
 namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
 {
-    /// <summary>
-    /// Extract Processor Tool (PDF processing flow).
-    /// Validates security, downloads the PDF, extracts transactions via FiscalNoteAgent,
-    /// persists a FiscalNote record, and queues a bulk-import approval.
-    /// </summary>
     public class ExtractProcessorTool : IExtractProcessorTool
     {
         private readonly AppDbContext _db;
@@ -56,14 +51,12 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
         {
             var userId = GetCurrentUserId();
 
-            // Step 1: Security validation
             var validationPrompt = $"Validate PDF import: userId={userId}, bankAccountId={bankAccountId}, fileUrl={fileUrl}";
             var validation = await _validator.AskAsync(validationPrompt);
 
             if (validation is null || !validation.IsValid)
                 return $"Security validation failed: {validation?.Reason ?? "Unknown reason"}. PDF not processed.";
 
-            // Step 2: Extract PDF text and classify transactions
             var objectName = ExtractObjectName(fileUrl);
             if (objectName is null)
                 return $"Invalid file URL format: {fileUrl}";
@@ -74,7 +67,6 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
             if (transactions.Count == 0)
                 return "No transactions could be extracted from the PDF. Please verify it is a valid bank statement.";
 
-            // Step 3: Persist FiscalNote (DB Save Tool)
             var fiscalNote = new FiscalNote
             {
                 UserId = userId,
@@ -88,7 +80,6 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
             _db.FiscalNotes.Add(fiscalNote);
             await _db.SaveChangesAsync();
 
-            // Step 4: Queue bulk-import approval (DB Save Tool)
             var items = transactions.Select(t => new ExtractedTransactionItem(
                 t.Date.ToString("yyyy-MM-dd"),
                 t.Description,
@@ -128,8 +119,6 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
             return Guid.TryParse(claim, out var id) ? id
                 : throw new InvalidOperationException("Authenticated user not found in context.");
         }
-
-        // ── Payload records ───────────────────────────────────────────────────────
 
         public record ExtractedTransactionItem(
             string Date,

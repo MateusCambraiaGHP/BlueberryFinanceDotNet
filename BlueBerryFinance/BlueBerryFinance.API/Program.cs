@@ -9,8 +9,6 @@ using BlueBerryFinance.API.Application.Features.Reports;
 using BlueBerryFinance.API.Application.Features.Stores;
 using BlueBerryFinance.API.Application.Features.Transactions;
 using BlueBerryFinance.API.Data.Context;
-using BlueBerryFinance.API.Data.Entities;
-using BlueBerryFinance.API.Domain.Entities.Enums;
 using BlueBerryFinance.API.Infrastructure.Jobs;
 using BlueBerryFinance.API.Infrastructure.Messaging;
 using BlueBerryFinance.API.Infrastructure.Messaging.Consumers;
@@ -36,7 +34,7 @@ using Serilog;
 using Serilog.Events;
 using System.Text;
 
-// ── Serilog bootstrap ──────────────────────────────────────────────────────────
+// Serilog bootstrap
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
     .Enrich.FromLogContext()
@@ -49,7 +47,7 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
-    // ── Serilog full config ────────────────────────────────────────────────────
+    // Serilog full config
     builder.Host.UseSerilog((ctx, services, config) =>
     {
         config
@@ -67,19 +65,20 @@ try
         }
     });
 
-    // ── Configuration bindings ─────────────────────────────────────────────────
+    // Configuration bindings 
     builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
     builder.Services.Configure<AIAgentOptions>(builder.Configuration.GetSection("LiteLLM"));
     builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection("RabbitMQ"));
-    // ── EF Core — main DB ──────────────────────────────────────────────────────
+    
+    //  EF Core — main DB 
     builder.Services.AddDbContext<AppDbContext>(opt =>
         opt.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
-    // ── EF Core — audit DB ────────────────────────────────────────────────────
+    // EF Core — audit DB
     builder.Services.AddDbContext<AuditDbContext>(opt =>
         opt.UseNpgsql(builder.Configuration.GetConnectionString("Audit")));
 
-    // ── JWT authentication ─────────────────────────────────────────────────────
+    // JWT authentication
     var jwtSecret = builder.Configuration["Jwt:Secret"] ?? string.Empty;
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(opt =>
@@ -96,14 +95,14 @@ try
             };
         });
 
-    // ── Authorization policies ─────────────────────────────────────────────────
+    // Authorization policies
     builder.Services.AddAuthorization(opt =>
     {
         opt.AddPolicy("AdminOnly", p => p.RequireClaim("profile", "Admin"));
         opt.AddPolicy("UserOrAdmin", p => p.RequireClaim("profile", "Admin", "User"));
     });
 
-    // ── Controllers + Swagger ──────────────────────────────────────────────────
+    // Controllers + Swagger
     builder.Services.AddControllers();
     builder.Services.AddFluentValidationAutoValidation();
     builder.Services.AddValidatorsFromAssemblyContaining<Program>();
@@ -111,14 +110,14 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    // ── Security headers ───────────────────────────────────────────────────────
+    // Security headers
     builder.Services.AddHsts(opt =>
     {
         opt.MaxAge = TimeSpan.FromDays(365);
         opt.IncludeSubDomains = true;
     });
 
-    // ── Infrastructure ─────────────────────────────────────────────────────────
+    // Infrastructure
     builder.Services.AddSingleton<IPromptLoader, PromptLoader>();
     builder.Services.AddSingleton<IAIAgentFactory, AIAgentFactory>();
     builder.Services.AddScoped<IJwtService, JwtService>();
@@ -126,27 +125,27 @@ try
     builder.Services.Configure<MinioOptions>(builder.Configuration.GetSection("Minio"));
     builder.Services.AddScoped<IMinioService, MinioService>();
 
-    // ── DB Query Tool (internal — used by SecurityValidationAgent + FinancialAnalysisTool) ──
+    // DB Query Tool
     builder.Services.AddScoped<IAgentReadTools, AgentReadTools>();
-    // ── DB Save Tool (internal — legacy tools, payload records shared with AgentApprovalHandler) ──
+    // DB Save Tool 
     builder.Services.AddScoped<IAgentWriteTools, AgentWriteTools>();
 
-    // ── Sub-agents ────────────────────────────────────────────────────────────
+    // Sub-agents
     builder.Services.AddScoped<IFiscalNoteAgent, FiscalNoteAgent>();
     builder.Services.AddScoped<IClassificationAgent, ClassificationAgent>();
     builder.Services.AddScoped<ISecurityValidationAgent, SecurityValidationAgent>();
 
-    // ── Orchestrator tools ────────────────────────────────────────────────────
+    // Orchestrator tools
     builder.Services.AddScoped<IIncomeExpenseSaverTool, IncomeExpenseSaverTool>();
     builder.Services.AddScoped<IExtractProcessorTool, ExtractProcessorTool>();
     builder.Services.AddScoped<IImageAnalyzerTool, ImageAnalyzerTool>();
     builder.Services.AddScoped<IFinancialAnalysisTool, FinancialAnalysisTool>();
     builder.Services.AddScoped<IOrchestratorTools, OrchestratorTools>();
 
-    // ── Blueberry Finance Agent (orchestrator — used for direct structured calls) ──
+    // Blueberry Finance Agent 
     builder.Services.AddScoped<IBlueberryFinanceAgent, BlueberryFinanceAgent>();
 
-    // ── Application handlers ───────────────────────────────────────────────────
+    //  Application handlers 
     builder.Services.AddScoped<IAgentApprovalHandler, AgentApprovalHandler>();
     builder.Services.AddScoped<IChatHandler, ChatHandler>();
     builder.Services.AddScoped<ITransactionHandler, TransactionHandler>();
@@ -158,20 +157,20 @@ try
     builder.Services.AddScoped<IReportHandler, ReportHandler>();
     builder.Services.AddScoped<IBankImportHandler, BankImportHandler>();
 
-    // ── Messaging ─────────────────────────────────────────────────────────────
+    // Messaging
     builder.Services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
 
-    // ── Background jobs & consumers ───────────────────────────────────────────
+    // Background jobs & consumers
     builder.Services.AddHostedService<MonthlyReportJob>();
     builder.Services.AddHostedService<PendingApprovalReminderJob>();
     builder.Services.AddHostedService<FiscalNoteConsumer>();
 
-    // ── HttpContextAccessor (needed for correlation ID forwarding) ────────────
+    // HttpContextAccessor (needed for correlation ID forwarding)
     builder.Services.AddHttpContextAccessor();
 
     var app = builder.Build();
 
-    // ── Auto-migrate & seed on startup ────────────────────────────────────────
+    // Auto-migrate & seed on startup
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -182,7 +181,6 @@ try
         {
             db.Database.Migrate();
             auditDb.Database.Migrate();
-            await SeedAsync(db, app.Configuration, logger);
         }
         catch (Exception ex)
         {
@@ -190,7 +188,7 @@ try
         }
     }
 
-    // ── Middleware pipeline ────────────────────────────────────────────────────
+    // Middleware pipeline
     app.UseSerilogRequestLogging();
 
     if (app.Environment.IsDevelopment())
@@ -236,44 +234,4 @@ catch (Exception ex)
 finally
 {
     Log.CloseAndFlush();
-}
-
-// ── Seed: admin user + currencies ─────────────────────────────────────────────
-static async Task SeedAsync(AppDbContext db, IConfiguration config, Microsoft.Extensions.Logging.ILogger logger)
-{
-    // Seed currencies
-    if (!db.Currencies.Any())
-    {
-        db.Currencies.AddRange(
-            new Currency { Code = CurrencyCode.BRL, Symbol = "R$", Name = "Brazilian Real", Active = 1 },
-            new Currency { Code = CurrencyCode.EUR, Symbol = "€", Name = "Euro", Active = 1 }
-        );
-        foreach (var c in db.Currencies.Local)
-        {
-            c.SetInsertionDate(DateTime.UtcNow);
-            c.SetLastModification(DateTime.UtcNow);
-        }
-    }
-
-    // Seed admin user
-    var adminEmail = config["DEFAULT_ADMIN_EMAIL"] ?? "mateus@hotmail.com";
-    var adminPassword = config["DEFAULT_ADMIN_PASSWORD"] ?? "ChangeMe123!";
-
-    if (!db.Users.IgnoreQueryFilters().Any(u => u.Email == adminEmail))
-    {
-        var admin = new User
-        {
-            Email = adminEmail,
-            Name = "Admin",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword),
-            Profile = "Admin",
-            Active = 1
-        };
-        admin.SetInsertionDate(DateTime.UtcNow);
-        admin.SetLastModification(DateTime.UtcNow);
-        db.Users.Add(admin);
-    }
-
-    await db.SaveChangesAsync();
-    logger.LogInformation("Database seeded successfully.");
 }

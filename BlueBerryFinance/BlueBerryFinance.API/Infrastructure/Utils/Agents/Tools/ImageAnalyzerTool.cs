@@ -1,5 +1,5 @@
 using BlueBerryFinance.API.Data.Context;
-using BlueBerryFinance.API.Data.Entities;
+using BlueBerryFinance.API.Domain.Entities;
 using BlueBerryFinance.API.Domain.Entities.Enums;
 using BlueBerryFinance.API.Infrastructure.Services.Interfaces;
 using BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Interfaces;
@@ -15,12 +15,7 @@ using static BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools.AgentWriteTo
 
 namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
 {
-    /// <summary>
-    /// Image Analyzer Tool.
-    /// Downloads the image from MinIO, uses LLM vision to extract receipt/expense data,
-    /// validates security, and queues a DB Save approval.
-    /// </summary>
-    public class ImageAnalyzerTool : IImageAnalyzerTool
+    public partial class ImageAnalyzerTool : IImageAnalyzerTool
     {
         private readonly AppDbContext _db;
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -74,7 +69,6 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
         {
             var userId = GetCurrentUserId();
 
-            // Resolve bank account
             var accountQuery = _db.BankAccounts
                 .Where(a => a.UserId == userId && a.Active == 1);
             if (!string.IsNullOrWhiteSpace(bankAccountName))
@@ -84,14 +78,12 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
                 return "No matching bank account found. Please check the account name or create one first.";
             var bankAccountId = account.Id;
 
-            // Step 1: Security validation
             var validationPrompt = $"Validate image analysis: userId={userId}, bankAccountId={bankAccountId}, imageUrl={imageUrl}";
             var validation = await _validator.AskAsync(validationPrompt);
 
             if (validation is null || !validation.IsValid)
                 return $"Security validation failed: {validation?.Reason ?? "Unknown reason"}. Image not processed.";
 
-            // Step 2: Download image and analyse with vision LLM
             var objectName = ExtractObjectName(imageUrl);
             if (objectName is null)
                 return $"Invalid image URL format: {imageUrl}";
@@ -237,7 +229,6 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
 
         private static string? ExtractObjectName(string url)
         {
-            // Handles both "statements/" and "images/" buckets
             foreach (var marker in new[] { "statements/", "images/", "receipts/" })
             {
                 var idx = url.IndexOf(marker, StringComparison.Ordinal);
@@ -263,25 +254,6 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
             var claim = _httpContextAccessor.HttpContext?.User.FindFirstValue("userId");
             return Guid.TryParse(claim, out var id) ? id
                 : throw new InvalidOperationException("Authenticated user not found in context.");
-        }
-
-        private sealed class ImageReceiptData
-        {
-            public string? ShopName { get; set; }
-            public decimal? TotalAmount { get; set; }
-            public string? Currency { get; set; }
-            public string? Country { get; set; }
-            public string? Description { get; set; }
-            public string? TransactionDate { get; set; }
-            public IList<ImageReceiptItem>? Items { get; set; }
-        }
-
-        private sealed class ImageReceiptItem
-        {
-            public string Name { get; set; } = string.Empty;
-            public decimal Quantity { get; set; }
-            public decimal UnitPrice { get; set; }
-            public decimal TotalPrice { get; set; }
         }
     }
 }

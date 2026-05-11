@@ -16,7 +16,7 @@ namespace BlueBerryFinance.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] ListTransactionsRequest request)
+        public async Task<IActionResult> Get([FromQuery] GetTransactionsFilterRequest request)
         {
             try
             {
