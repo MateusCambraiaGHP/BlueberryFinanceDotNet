@@ -15,7 +15,7 @@ namespace BlueBerryFinance.API.Controllers
             => _handler = handler;
 
         [HttpGet("pending")]
-        public async Task<IActionResult> Get(AgentApprovalFilterRequest filter)
+        public async Task<IActionResult> Get([FromQuery] AgentApprovalFilterRequest filter)
         {
             try
             {

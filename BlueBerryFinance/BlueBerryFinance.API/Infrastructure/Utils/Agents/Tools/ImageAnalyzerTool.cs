@@ -64,7 +64,7 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
             "Downloads a receipt or invoice image, extracts expense data using vision AI, validates security, and queues a transaction for user approval.");
 
         private async Task<string> AnalyzeAsync(
-            [Description("Public URL of the uploaded receipt or invoice image")] string imageUrl,
+            [Description("URL of the uploaded receipt or invoice image as returned by the upload endpoint")] string imageUrl,
             [Description("Bank account name to associate the transaction with. Leave empty to use the default account.")] string? bankAccountName = null)
         {
             var userId = GetCurrentUserId();

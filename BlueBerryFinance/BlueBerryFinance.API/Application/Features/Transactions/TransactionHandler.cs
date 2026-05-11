@@ -20,6 +20,10 @@ namespace BlueBerryFinance.API.Application.Features.Transactions
         {
             var query = _db.Transactions
                 .AsNoTracking()
+                .Include(t => t.BankAccount)
+                .Include(t => t.Store)
+                .Include(t => t.Category)
+                .Include(t => t.Currency)
                 .Where(t => t.UserId == userId);
 
             if (request.Id.HasValue)
@@ -32,7 +36,7 @@ namespace BlueBerryFinance.API.Application.Features.Transactions
                 query = query.Where(t => t.CategoryId == request.CategoryId.Value);
 
             if (request.DateFrom.HasValue)
-                query = query.Where(t => t.TransactionDate >= request.DateFrom.Value);
+                query = query.Where(t => t.TransactionDate > request.DateFrom.Value);
 
             if (request.DateTo.HasValue)
                 query = query.Where(t => t.TransactionDate <= request.DateTo.Value);
@@ -185,6 +189,10 @@ namespace BlueBerryFinance.API.Application.Features.Transactions
         {
             return await _db.Transactions
                 .AsNoTracking()
+                .Include(t => t.BankAccount)
+                .Include(t => t.Store)
+                .Include(t => t.Category)
+                .Include(t => t.Currency)
                 .Where(t => t.Id == id && t.UserId == userId)
                 .Select(t => ToViewModel(t))
                 .FirstAsync();

@@ -21,7 +21,7 @@ namespace BlueberryFinance.Web.Clients
             streamContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
             content.Add(streamContent, "file", fileName);
 
-            var response = await _http.PostAsync("api/v1.0/chat/upload-image", content, ct);
+            var response = await _http.PostAsync("chat/upload-image", content, ct);
             if (!response.IsSuccessStatusCode) return null;
 
             using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct));
@@ -32,7 +32,7 @@ namespace BlueberryFinance.Web.Clients
             string prompt,
             [EnumeratorCancellation] CancellationToken ct = default)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, "api/v1.0/chat/stream");
+            var request = new HttpRequestMessage(HttpMethod.Post, "chat/stream");
             request.Content = JsonContent.Create(new { prompt });
 
             var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);

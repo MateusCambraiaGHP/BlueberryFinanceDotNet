@@ -23,7 +23,7 @@ namespace BlueberryFinance.Web.Clients
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
             content.Add(fileContent, "file", fileName);
 
-            var response = await _http.PostAsync($"api/v1.0/csv-import/{bankAccountId}", content, ct);
+            var response = await _http.PostAsync($"bank-import/{bankAccountId}", content, ct);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<CsvImportResultViewModel>(ct);
         }

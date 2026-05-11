@@ -8,6 +8,8 @@ namespace BlueBerryFinance.Common.ViewModels
         public IReadOnlyList<CategoryBreakdownViewModel> Categories { get; set; } = [];
         public IReadOnlyList<StoreBreakdownViewModel> Stores { get; set; } = [];
 
+        public MonthlyReportViewModel() { }
+
         public MonthlyReportViewModel(
             int year,
             int month,

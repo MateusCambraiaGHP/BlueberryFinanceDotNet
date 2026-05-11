@@ -1,0 +1,26 @@
+@* Usage: <StatCard Label="Total Balance" Value="@balance.ToString("N2")"
+                    Icon="@Icons.Material.Filled.AccountBalance" AccentColor="#4f8ef7" /> *@
+
+<MudCard Elevation="1" Class="pa-5" Style="border-radius:12px">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+        <div>
+            <MudText Typo="Typo.caption"
+                     Style="color:#6b7280;text-transform:uppercase;letter-spacing:.5px;font-weight:600">
+                @Label
+            </MudText>
+            <MudText Typo="Typo.h5" Style="font-weight:700;color:#0f1b2d;margin-top:4px">
+                @Value
+            </MudText>
+        </div>
+        <MudAvatar Style="@($"background:{AccentColor}1f;color:{AccentColor}")" Size="Size.Large">
+            <MudIcon Icon="@Icon" />
+        </MudAvatar>
+    </MudStack>
+</MudCard>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Value { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Icon { get; set; } = string.Empty;
+    [Parameter] public string AccentColor { get; set; } = "#4f8ef7";
+}

@@ -1,0 +1,32 @@
+@* Usage:
+     <EmptyState Icon="@Icons.Material.Filled.AccountBalance"
+                 IconColor="#4f8ef7"
+                 Heading="No accounts yet"
+                 Subtext="Add your first bank account to get started." /> *@
+
+<MudCard Elevation="1" Style="border-radius:12px;padding:48px 32px;text-align:center">
+    <MudAvatar Style="@($"background:{IconColor}1a;color:{IconColor};width:56px;height:56px;margin:0 auto 16px")"
+               Size="Size.Large">
+        <MudIcon Icon="@Icon" Style="@($"font-size:{IconSize}")" />
+    </MudAvatar>
+    <MudText Typo="Typo.body1" Style="font-weight:600;color:#374151">@Heading</MudText>
+    @if (!string.IsNullOrWhiteSpace(Subtext))
+    {
+        <MudText Typo="Typo.body2" Style="color:#9ca3af;margin-top:4px">@Subtext</MudText>
+    }
+    @if (Actions is not null)
+    {
+        <div style="margin-top:20px">
+            @Actions
+        </div>
+    }
+</MudCard>
+
+@code {
+    [Parameter, EditorRequired] public string Icon { get; set; } = string.Empty;
+    [Parameter] public string IconColor { get; set; } = "#4f8ef7";
+    [Parameter] public string IconSize { get; set; } = "24px";
+    [Parameter, EditorRequired] public string Heading { get; set; } = string.Empty;
+    [Parameter] public string? Subtext { get; set; }
+    [Parameter] public RenderFragment? Actions { get; set; }
+}

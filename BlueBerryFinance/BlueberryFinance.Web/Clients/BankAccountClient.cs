@@ -1,4 +1,5 @@
 using BlueBerryFinance.Common.ViewModels;
+using BlueberryFinance.Web.Models;
 using System.Net.Http.Json;
 
 namespace BlueberryFinance.Web.Clients
@@ -14,24 +15,27 @@ namespace BlueberryFinance.Web.Clients
 
         public async Task<IReadOnlyList<BankAccountViewModel>?> GetAsync(CancellationToken ct = default)
         {
-            return await _http.GetFromJsonAsync<IReadOnlyList<BankAccountViewModel>>("api/v1.0/bank-account", ct);
+            var response = await _http.GetFromJsonAsync<ApiResponse<BankAccountViewModel>>("bank-account", ct);
+            return response?.Data?.AsReadOnly();
         }
 
         public async Task<BankAccountViewModel?> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
-            return await _http.GetFromJsonAsync<BankAccountViewModel>($"api/v1.0/bank-account/{id}", ct);
+            var response = await _http.GetFromJsonAsync<ApiResponse<BankAccountViewModel>>($"bank-account/{id}", ct);
+            return response?.Data?.FirstOrDefault();
         }
 
         public async Task<BankAccountViewModel?> CreateAsync(object request, CancellationToken ct = default)
         {
-            var response = await _http.PostAsJsonAsync("api/v1.0/bank-account", request, ct);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<BankAccountViewModel>(ct);
+            var httpResponse = await _http.PostAsJsonAsync("bank-account", request, ct);
+            httpResponse.EnsureSuccessStatusCode();
+            var response = await httpResponse.Content.ReadFromJsonAsync<ApiResponse<BankAccountViewModel>>(ct);
+            return response?.Data?.FirstOrDefault();
         }
 
         public async Task DeleteAsync(Guid id, CancellationToken ct = default)
         {
-            var response = await _http.DeleteAsync($"api/v1.0/bank-account/{id}", ct);
+            var response = await _http.DeleteAsync($"bank-account/{id}", ct);
             response.EnsureSuccessStatusCode();
         }
     }

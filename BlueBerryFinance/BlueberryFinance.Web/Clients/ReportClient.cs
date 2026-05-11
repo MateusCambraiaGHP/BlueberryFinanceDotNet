@@ -1,4 +1,5 @@
 using BlueBerryFinance.Common.ViewModels;
+using BlueberryFinance.Web.Models;
 using System.Net.Http.Json;
 
 namespace BlueberryFinance.Web.Clients
@@ -15,8 +16,9 @@ namespace BlueberryFinance.Web.Clients
         public async Task<MonthlyReportViewModel?> GetMonthlyAsync(
             int year, int month, CancellationToken ct = default)
         {
-            return await _http.GetFromJsonAsync<MonthlyReportViewModel>(
-                $"api/v1.0/report/monthly?year={year}&month={month}", ct);
+            var response = await _http.GetFromJsonAsync<ApiResponse<MonthlyReportViewModel>>(
+                $"report/monthly?year={year}&month={month}", ct);
+            return response?.Data?.FirstOrDefault();
         }
     }
 }

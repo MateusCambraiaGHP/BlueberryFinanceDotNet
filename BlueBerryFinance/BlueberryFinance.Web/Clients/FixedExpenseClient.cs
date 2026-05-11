@@ -1,4 +1,5 @@
 using BlueBerryFinance.Common.ViewModels;
+using BlueberryFinance.Web.Models;
 using System.Net.Http.Json;
 
 namespace BlueberryFinance.Web.Clients
@@ -14,24 +15,27 @@ namespace BlueberryFinance.Web.Clients
 
         public async Task<IReadOnlyList<FixedExpenseViewModel>?> GetAsync(CancellationToken ct = default)
         {
-            return await _http.GetFromJsonAsync<IReadOnlyList<FixedExpenseViewModel>>("api/v1.0/fixed-expense", ct);
+            var response = await _http.GetFromJsonAsync<ApiResponse<FixedExpenseViewModel>>("fixed-expense", ct);
+            return response?.Data?.AsReadOnly();
         }
 
         public async Task<FixedExpenseViewModel?> GetByIdAsync(Guid id, CancellationToken ct = default)
         {
-            return await _http.GetFromJsonAsync<FixedExpenseViewModel>($"api/v1.0/fixed-expense/{id}", ct);
+            var response = await _http.GetFromJsonAsync<ApiResponse<FixedExpenseViewModel>>($"fixed-expense/{id}", ct);
+            return response?.Data?.FirstOrDefault();
         }
 
         public async Task<FixedExpenseViewModel?> CreateAsync(object request, CancellationToken ct = default)
         {
-            var response = await _http.PostAsJsonAsync("api/v1.0/fixed-expense", request, ct);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<FixedExpenseViewModel>(ct);
+            var httpResponse = await _http.PostAsJsonAsync("fixed-expense", request, ct);
+            httpResponse.EnsureSuccessStatusCode();
+            var response = await httpResponse.Content.ReadFromJsonAsync<ApiResponse<FixedExpenseViewModel>>(ct);
+            return response?.Data?.FirstOrDefault();
         }
 
         public async Task DeleteAsync(Guid id, CancellationToken ct = default)
         {
-            var response = await _http.DeleteAsync($"api/v1.0/fixed-expense/{id}", ct);
+            var response = await _http.DeleteAsync($"fixed-expense/{id}", ct);
             response.EnsureSuccessStatusCode();
         }
     }

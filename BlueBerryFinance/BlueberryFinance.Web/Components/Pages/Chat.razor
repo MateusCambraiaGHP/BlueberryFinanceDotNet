@@ -277,15 +277,26 @@
 
     private async Task RefreshApprovalsAsync()
     {
-        try { _pendingApprovals = await ApprovalClient.GetPendingAsync() ?? []; }
-        catch { _pendingApprovals = []; }
+        try
+        {
+            _pendingApprovals = await ApprovalClient.GetPendingAsync() ?? [];
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load approvals: {ex.Message}";
+            _pendingApprovals = [];
+        }
         await InvokeAsync(StateHasChanged);
     }
 
     private static string FormatToolName(string tool) => tool switch
     {
         "create_transaction" => "Register Transaction",
+        "save_income_expense" => "Register Transaction",
+        "analyze_image" => "Receipt / Fiscal Note",
         "delete_transaction" => "Delete Transaction",
+        "delete_income_expense" => "Delete Transaction",
+        "process_bank_statement" => "Bank Statement Import",
         _ => tool
     };
 
@@ -297,10 +308,14 @@
             var root = doc.RootElement;
             return tool switch
             {
-                "create_transaction" => $"{(root.TryGetProperty("transactionType", out var tt) ? tt.GetString() : "?")} — " +
-                                        $"{(root.TryGetProperty("description", out var desc) ? desc.GetString() : "?")} — " +
-                                        $"{(root.TryGetProperty("amount", out var amt) ? amt.GetDecimal().ToString("N2") : "?")}",
-                "delete_transaction" => $"Transaction ID: {(root.TryGetProperty("transactionId", out var tid) ? tid.GetString() : "?")}",
+                "create_transaction" or "save_income_expense" or "analyze_image" =>
+                    $"{(root.TryGetProperty("transactionType", out var tt) ? tt.GetString() : "Expense")} — " +
+                    $"{(root.TryGetProperty("description", out var desc) ? desc.GetString() : "?")} — " +
+                    $"{(root.TryGetProperty("amount", out var amt) ? amt.GetDecimal().ToString("N2") : "?")}",
+                "delete_transaction" or "delete_income_expense" =>
+                    $"Transaction ID: {(root.TryGetProperty("transactionId", out var tid) ? tid.GetString() : "?")}",
+                "process_bank_statement" =>
+                    $"Bank account: {(root.TryGetProperty("bankAccountId", out var ba) ? ba.GetString() : "?")}",
                 _ => payload
             };
         }

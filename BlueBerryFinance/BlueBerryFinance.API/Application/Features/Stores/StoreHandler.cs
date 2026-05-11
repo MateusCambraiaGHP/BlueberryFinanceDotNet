@@ -18,7 +18,7 @@ namespace BlueBerryFinance.API.Application.Features.Stores
         public async Task<BaseResponse<StoreViewModel>> GetAsync(
             StoreFilterRequest filter)
         {
-            var query = _db.Stores.AsNoTracking();
+            IQueryable<Store> query = _db.Stores.AsNoTracking().Include(s => s.Category);
 
             if (filter.Id.HasValue)
                 query = query.Where(s => s.Id == filter.Id.Value);

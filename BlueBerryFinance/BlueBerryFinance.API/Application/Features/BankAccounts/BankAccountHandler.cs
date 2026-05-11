@@ -18,6 +18,7 @@ namespace BlueBerryFinance.API.Application.Features.BankAccounts
         {
             var query = _db.BankAccounts
                 .AsNoTracking()
+                .Include(ba => ba.Currency)
                 .Where(ba => ba.UserId == userId);
 
             if (filter.Id.HasValue)

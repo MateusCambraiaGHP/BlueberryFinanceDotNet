@@ -1,4 +1,5 @@
 using BlueBerryFinance.Common.ViewModels;
+using BlueberryFinance.Web.Models;
 using System.Net.Http.Json;
 
 namespace BlueberryFinance.Web.Clients
@@ -14,7 +15,8 @@ namespace BlueberryFinance.Web.Clients
 
         public async Task<IReadOnlyList<CurrencyViewModel>?> GetAsync(CancellationToken ct = default)
         {
-            return await _http.GetFromJsonAsync<IReadOnlyList<CurrencyViewModel>>("api/v1.0/currency", ct);
+            var response = await _http.GetFromJsonAsync<ApiResponse<CurrencyViewModel>>("currency", ct);
+            return response?.Data?.AsReadOnly();
         }
     }
 }

@@ -1,4 +1,5 @@
 using BlueBerryFinance.Common.ViewModels;
+using BlueberryFinance.Web.Models;
 using System.Net.Http.Json;
 
 namespace BlueberryFinance.Web.Clients
@@ -14,22 +15,25 @@ namespace BlueberryFinance.Web.Clients
 
         public async Task<IReadOnlyList<AgentApprovalViewModel>?> GetPendingAsync(CancellationToken ct = default)
         {
-            return await _http.GetFromJsonAsync<IReadOnlyList<AgentApprovalViewModel>>(
-                "api/v1.0/agent-approvals/pending", ct);
+            var response = await _http.GetFromJsonAsync<ApiResponse<AgentApprovalViewModel>>(
+                "agent-approvals/pending", ct);
+            return response?.Data?.AsReadOnly();
         }
 
         public async Task<AgentApprovalViewModel?> ApproveAsync(Guid id, CancellationToken ct = default)
         {
-            var response = await _http.PostAsync($"api/v1.0/agent-approvals/{id}/approve", null, ct);
-            await EnsureSuccessAsync(response, ct);
-            return await response.Content.ReadFromJsonAsync<AgentApprovalViewModel>(ct);
+            var httpResponse = await _http.PostAsync($"agent-approvals/{id}/approve", null, ct);
+            await EnsureSuccessAsync(httpResponse, ct);
+            var response = await httpResponse.Content.ReadFromJsonAsync<ApiResponse<AgentApprovalViewModel>>(ct);
+            return response?.Data?.FirstOrDefault();
         }
 
         public async Task<AgentApprovalViewModel?> RejectAsync(Guid id, CancellationToken ct = default)
         {
-            var response = await _http.PostAsync($"api/v1.0/agent-approvals/{id}/reject", null, ct);
-            await EnsureSuccessAsync(response, ct);
-            return await response.Content.ReadFromJsonAsync<AgentApprovalViewModel>(ct);
+            var httpResponse = await _http.PostAsync($"agent-approvals/{id}/reject", null, ct);
+            await EnsureSuccessAsync(httpResponse, ct);
+            var response = await httpResponse.Content.ReadFromJsonAsync<ApiResponse<AgentApprovalViewModel>>(ct);
+            return response?.Data?.FirstOrDefault();
         }
 
         private static async Task EnsureSuccessAsync(HttpResponseMessage response, CancellationToken ct)

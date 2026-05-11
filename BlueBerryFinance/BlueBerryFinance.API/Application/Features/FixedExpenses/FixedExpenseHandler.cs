@@ -19,6 +19,8 @@ namespace BlueBerryFinance.API.Application.Features.FixedExpenses
         {
             var query = _db.FixedExpenses
                 .AsNoTracking()
+                .Include(f => f.Currency)
+                .Include(f => f.Store)
                 .Where(f => f.UserId == userId);
 
             if (filter.Id.HasValue)
