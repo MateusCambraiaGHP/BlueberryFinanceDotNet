@@ -17,11 +17,6 @@ namespace BlueBerryFinance.API.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Upload a CSV bank statement export and import transactions into the given bank account.
-        /// Supported formats: ActivoBank, CGD, BPI, Millennium BCP (semicolon-separated Portuguese CSV).
-        /// Duplicate rows (same date + amount + description) are automatically skipped.
-        /// </summary>
         [HttpPost("{bankAccountId:guid}")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(StatusCodes.Status200OK)]

@@ -16,7 +16,6 @@ namespace BlueBerryFinance.API.Controllers
             _logger  = logger;
         }
 
-        /// <summary>GET /api/v1.0/report/monthly?year=2025&month=3</summary>
         [HttpGet("report/monthly")]
         public async Task<IActionResult> GetMonthly(
             [FromQuery] int year, [FromQuery] int month, CancellationToken ct)

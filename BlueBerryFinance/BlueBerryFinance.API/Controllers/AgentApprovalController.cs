@@ -16,7 +16,6 @@ namespace BlueBerryFinance.API.Controllers
             _logger = logger;
         }
 
-        /// <summary>Returns all pending agent approvals for the current user.</summary>
         [HttpGet("agent-approvals/pending")]
         public async Task<IActionResult> GetPending(CancellationToken ct)
         {
@@ -31,7 +30,6 @@ namespace BlueBerryFinance.API.Controllers
             }
         }
 
-        /// <summary>Approves a pending agent action and executes it immediately.</summary>
         [HttpPost("agent-approvals/{id:guid}/approve")]
         public async Task<IActionResult> Approve(Guid id, CancellationToken ct)
         {
@@ -54,7 +52,6 @@ namespace BlueBerryFinance.API.Controllers
             }
         }
 
-        /// <summary>Rejects a pending agent action without executing it.</summary>
         [HttpPost("agent-approvals/{id:guid}/reject")]
         public async Task<IActionResult> Reject(Guid id, CancellationToken ct)
         {
