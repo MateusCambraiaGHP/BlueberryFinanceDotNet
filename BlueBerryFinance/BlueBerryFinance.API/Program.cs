@@ -26,6 +26,8 @@ using BlueBerryFinance.API.Infrastructure.Utils.Factories.Interfaces;
 using BlueBerryFinance.API.Infrastructure.Utils.Helpers;
 using BlueBerryFinance.API.Infrastructure.Utils.Helpers.Interfaces;
 using BlueBerryFinance.API.Infrastructure.Utils.Models;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -102,6 +104,8 @@ try
 
     // ── Controllers + Swagger ──────────────────────────────────────────────────
     builder.Services.AddControllers();
+    builder.Services.AddFluentValidationAutoValidation();
+    builder.Services.AddValidatorsFromAssemblyContaining<Program>();
     builder.Services.AddOpenApi();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
