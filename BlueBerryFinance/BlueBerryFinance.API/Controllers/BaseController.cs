@@ -19,9 +19,9 @@ namespace BlueBerryFinance.API.Controllers
             }
         }
 
-        protected IActionResult HandleException(Exception ex, ILogger logger)
+        protected IActionResult HandleException(Exception ex)
         {
-            logger.LogError(ex, "Unhandled exception");
+            //TODO :: ADD LOGS
             return StatusCode(500, new { message = "An unexpected error occurred." });
         }
     }

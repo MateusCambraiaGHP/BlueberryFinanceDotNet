@@ -4,9 +4,17 @@ namespace BlueBerryFinance.API.Application.Features.Transaction
 {
     public interface ITransactionHandler
     {
-        Task<PagedResult<TransactionViewModel>> GetAsync(ListTransactionsRequest request, Guid userId, CancellationToken ct = default);
-        Task<TransactionViewModel> RegisterAsync(RegisterTransactionRequest request, Guid userId, CancellationToken ct = default);
-        Task<TransactionViewModel?> UpdateAsync(UpdateTransactionRequest request, Guid userId, CancellationToken ct = default);
-        Task<bool> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default);
+        Task<PagedResult<TransactionViewModel>> GetAsync(
+            ListTransactionsRequest request, 
+            Guid userId);
+        Task<TransactionViewModel> RegisterAsync(
+            RegisterTransactionRequest request, 
+            Guid userId);
+        Task<TransactionViewModel?> UpdateAsync(
+            UpdateTransactionRequest request, 
+            Guid userId);
+        Task<bool> DeleteAsync(
+            Guid id, 
+            Guid userId);
     }
 }

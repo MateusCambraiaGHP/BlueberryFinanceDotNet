@@ -14,7 +14,7 @@ namespace BlueBerryFinance.API.Application.Features.Category
         }
 
         public async Task<IReadOnlyList<CategoryViewModel>> GetAsync(
-            CategoryFilterRequest filter, CancellationToken ct = default)
+            CategoryFilterRequest filter)
         {
             var query = _db.Categories.AsNoTracking();
 
@@ -31,10 +31,10 @@ namespace BlueBerryFinance.API.Application.Features.Category
                     Type = c.Type,
                     Active = c.Active == 1
                 })
-                .ToListAsync(ct);
+                .ToListAsync();
         }
 
-        public async Task<CategoryViewModel> RegisterAsync(RegisterCategoryRequest request, CancellationToken ct = default)
+        public async Task<CategoryViewModel> RegisterAsync(RegisterCategoryRequest request)
         {
             var entity = new Data.Entities.Category
             {
@@ -52,19 +52,19 @@ namespace BlueBerryFinance.API.Application.Features.Category
 
             try
             {
-                await _db.SaveChangesAsync(ct);
+                await _db.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
                 throw new InvalidOperationException("Failed to register category.", ex);
             }
 
-            return (await GetAsync(new CategoryFilterRequest { Id = entity.Id }, ct)).First();
+            return (await GetAsync(new CategoryFilterRequest { Id = entity.Id })).First();
         }
 
-        public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
+        public async Task<bool> DeleteAsync(Guid id)
         {
-            var entity = await _db.Categories.FirstOrDefaultAsync(c => c.Id == id, ct);
+            var entity = await _db.Categories.FirstOrDefaultAsync(c => c.Id == id);
             if (entity is null) return false;
 
             entity.Delete();
@@ -72,7 +72,7 @@ namespace BlueBerryFinance.API.Application.Features.Category
 
             try
             {
-                await _db.SaveChangesAsync(ct);
+                await _db.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {

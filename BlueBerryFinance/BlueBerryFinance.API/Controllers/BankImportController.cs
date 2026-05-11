@@ -4,25 +4,20 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlueBerryFinance.API.Controllers
 {
-    [Route("api/v1.0/bank-import")]
+    [Route("bank-import")]
     [Authorize]
     public class BankImportController : BaseController
     {
         private readonly IBankImportHandler _handler;
-        private readonly ILogger<BankImportController> _logger;
 
-        public BankImportController(IBankImportHandler handler, ILogger<BankImportController> logger)
+        public BankImportController(IBankImportHandler handler)
         {
             _handler = handler;
-            _logger = logger;
         }
 
         [HttpPost("{bankAccountId:guid}")]
         [Consumes("multipart/form-data")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Import(Guid bankAccountId, IFormFile file, CancellationToken ct)
+        public async Task<IActionResult> Import(Guid bankAccountId, IFormFile file)
         {
             if (file is null || file.Length == 0)
                 return BadRequest(new { error = "No file provided." });
@@ -34,7 +29,7 @@ namespace BlueBerryFinance.API.Controllers
             try
             {
                 await using var stream = file.OpenReadStream();
-                var result = await _handler.ImportAsync(bankAccountId, CurrentUserId, stream, ct);
+                var result = await _handler.ImportAsync(bankAccountId, CurrentUserId, stream);
                 return Ok(result);
             }
             catch (KeyNotFoundException ex)
@@ -43,7 +38,7 @@ namespace BlueBerryFinance.API.Controllers
             }
             catch (Exception ex)
             {
-                return HandleException(ex, _logger);
+                return HandleException(ex);
             }
         }
     }

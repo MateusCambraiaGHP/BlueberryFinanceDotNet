@@ -14,7 +14,7 @@ namespace BlueBerryFinance.API.Application.Features.Transaction
         }
 
         public async Task<PagedResult<TransactionViewModel>> GetAsync(
-            ListTransactionsRequest request, Guid userId, CancellationToken ct = default)
+            ListTransactionsRequest request, Guid userId)
         {
             var query = _db.Transactions
                 .AsNoTracking()
@@ -38,7 +38,7 @@ namespace BlueBerryFinance.API.Application.Features.Transaction
             if (!string.IsNullOrWhiteSpace(request.Search))
                 query = query.Where(t => t.Description.Contains(request.Search) || t.Store.Name.Contains(request.Search));
 
-            var total = await query.CountAsync(ct);
+            var total = await query.CountAsync();
             var items = await query
                 .OrderByDescending(t => t.TransactionDate)
                 .Skip((request.Page - 1) * request.PageSize)
@@ -65,7 +65,7 @@ namespace BlueBerryFinance.API.Application.Features.Transaction
                     CorrelationId = t.CorrelationId,
                     InsertionDate = t.InsertionDate
                 })
-                .ToListAsync(ct);
+                .ToListAsync();
 
             return new PagedResult<TransactionViewModel>
             {
@@ -77,10 +77,10 @@ namespace BlueBerryFinance.API.Application.Features.Transaction
         }
 
         public async Task<TransactionViewModel> RegisterAsync(
-            RegisterTransactionRequest request, Guid userId, CancellationToken ct = default)
+            RegisterTransactionRequest request, Guid userId)
         {
             var account = await _db.BankAccounts
-                .FirstOrDefaultAsync(a => a.Id == request.BankAccountId && a.UserId == userId, ct)
+                .FirstOrDefaultAsync(a => a.Id == request.BankAccountId && a.UserId == userId)
                 ?? throw new InvalidOperationException("Bank account not found.");
 
             var entity = new Data.Entities.Transaction
@@ -112,26 +112,26 @@ namespace BlueBerryFinance.API.Application.Features.Transaction
 
             try
             {
-                await _db.SaveChangesAsync(ct);
+                await _db.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
                 throw new InvalidOperationException("Failed to register transaction.", ex);
             }
 
-            return (await GetAsync(new ListTransactionsRequest { Id = entity.Id }, userId, ct)).Items.First();
+            return (await GetAsync(new ListTransactionsRequest { Id = entity.Id }, userId)).Items.First();
         }
 
         public async Task<TransactionViewModel?> UpdateAsync(
-            UpdateTransactionRequest request, Guid userId, CancellationToken ct = default)
+            UpdateTransactionRequest request, Guid userId)
         {
             var entity = await _db.Transactions
-                .FirstOrDefaultAsync(t => t.Id == request.Id && t.UserId == userId, ct);
+                .FirstOrDefaultAsync(t => t.Id == request.Id && t.UserId == userId);
 
             if (entity is null) return null;
 
             var account = await _db.BankAccounts
-                .FirstOrDefaultAsync(a => a.Id == entity.BankAccountId && a.UserId == userId, ct)
+                .FirstOrDefaultAsync(a => a.Id == entity.BankAccountId && a.UserId == userId)
                 ?? throw new InvalidOperationException("Bank account not found.");
 
             account.Balance -= entity.TransactionType == Data.Entities.Enums.TransactionType.Income
@@ -153,25 +153,25 @@ namespace BlueBerryFinance.API.Application.Features.Transaction
 
             try
             {
-                await _db.SaveChangesAsync(ct);
+                await _db.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
                 throw new InvalidOperationException("Failed to update transaction.", ex);
             }
 
-            return (await GetAsync(new ListTransactionsRequest { Id = entity.Id }, userId, ct)).Items.FirstOrDefault();
+            return (await GetAsync(new ListTransactionsRequest { Id = entity.Id }, userId)).Items.FirstOrDefault();
         }
 
-        public async Task<bool> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
+        public async Task<bool> DeleteAsync(Guid id, Guid userId)
         {
             var entity = await _db.Transactions
-                .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId, ct);
+                .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
 
             if (entity is null) return false;
 
             var account = await _db.BankAccounts
-                .FirstOrDefaultAsync(a => a.Id == entity.BankAccountId && a.UserId == userId, ct);
+                .FirstOrDefaultAsync(a => a.Id == entity.BankAccountId && a.UserId == userId);
 
             if (account is not null)
             {
@@ -185,7 +185,7 @@ namespace BlueBerryFinance.API.Application.Features.Transaction
 
             try
             {
-                await _db.SaveChangesAsync(ct);
+                await _db.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {

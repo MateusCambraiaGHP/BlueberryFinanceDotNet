@@ -14,7 +14,7 @@ namespace BlueBerryFinance.API.Application.Features.BankAccount
         }
 
         public async Task<IReadOnlyList<BankAccountViewModel>> GetAsync(
-            BankAccountFilterRequest filter, Guid userId, CancellationToken ct = default)
+            BankAccountFilterRequest filter, Guid userId)
         {
             var query = _db.BankAccounts
                 .AsNoTracking()
@@ -36,10 +36,10 @@ namespace BlueBerryFinance.API.Application.Features.BankAccount
                     Balance = b.Balance,
                     Active = b.Active == 1
                 })
-                .ToListAsync(ct);
+                .ToListAsync();
         }
 
-        public async Task<BankAccountViewModel> RegisterAsync(RegisterBankAccountRequest request, Guid userId, CancellationToken ct = default)
+        public async Task<BankAccountViewModel> RegisterAsync(RegisterBankAccountRequest request, Guid userId)
         {
             var entity = new Data.Entities.BankAccount
             {
@@ -59,20 +59,20 @@ namespace BlueBerryFinance.API.Application.Features.BankAccount
 
             try
             {
-                await _db.SaveChangesAsync(ct);
+                await _db.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
                 throw new InvalidOperationException("Failed to register bank account.", ex);
             }
 
-            return (await GetAsync(new BankAccountFilterRequest { Id = entity.Id }, userId, ct)).First();
+            return (await GetAsync(new BankAccountFilterRequest { Id = entity.Id }, userId)).First();
         }
 
-        public async Task<bool> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
+        public async Task<bool> DeleteAsync(Guid id, Guid userId)
         {
             var entity = await _db.BankAccounts
-                .FirstOrDefaultAsync(b => b.Id == id && b.UserId == userId, ct);
+                .FirstOrDefaultAsync(b => b.Id == id && b.UserId == userId);
 
             if (entity is null) return false;
 
@@ -81,7 +81,7 @@ namespace BlueBerryFinance.API.Application.Features.BankAccount
 
             try
             {
-                await _db.SaveChangesAsync(ct);
+                await _db.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {

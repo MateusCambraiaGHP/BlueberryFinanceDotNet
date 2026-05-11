@@ -29,8 +29,7 @@ namespace BlueBerryFinance.API.Application.Features.AgentApproval
             _transactionHandler = transactionHandler;
         }
 
-        public async Task<IReadOnlyList<AgentApprovalViewModel>> ListPendingAsync(
-            Guid userId, CancellationToken ct = default)
+        public async Task<IReadOnlyList<AgentApprovalViewModel>> ListPendingAsync(Guid userId)
         {
             return await _db.AgentApprovals
                 .AsNoTracking()
@@ -47,36 +46,34 @@ namespace BlueBerryFinance.API.Application.Features.AgentApproval
                     ResolvedAt = a.ResolvedAt,
                     InsertionDate = a.InsertionDate
                 })
-                .ToListAsync(ct);
+                .ToListAsync();
         }
 
-        public async Task<AgentApprovalViewModel?> ApproveAsync(
-            Guid approvalId, Guid userId, CancellationToken ct = default)
+        public async Task<AgentApprovalViewModel?> ApproveAsync(Guid approvalId, Guid userId)
         {
             var approval = await _db.AgentApprovals
-                .FirstOrDefaultAsync(a => a.Id == approvalId && a.UserId == userId, ct);
+                .FirstOrDefaultAsync(a => a.Id == approvalId && a.UserId == userId);
 
             if (approval is null) return null;
 
             if (approval.Status != ApprovalStatus.Pending)
                 throw new InvalidOperationException($"Approval is already {approval.Status}.");
 
-            await ExecuteToolAsync(approval, userId, ct);
+            await ExecuteToolAsync(approval, userId);
 
             approval.Status = ApprovalStatus.Approved;
             approval.ResolvedAt = DateTime.UtcNow;
             approval.SetLastModification(DateTime.UtcNow);
 
-            await _db.SaveChangesAsync(ct);
+            await _db.SaveChangesAsync();
 
             return ToViewModel(approval);
         }
 
-        public async Task<AgentApprovalViewModel?> RejectAsync(
-            Guid approvalId, Guid userId, CancellationToken ct = default)
+        public async Task<AgentApprovalViewModel?> RejectAsync(Guid approvalId, Guid userId)
         {
             var approval = await _db.AgentApprovals
-                .FirstOrDefaultAsync(a => a.Id == approvalId && a.UserId == userId, ct);
+                .FirstOrDefaultAsync(a => a.Id == approvalId && a.UserId == userId);
 
             if (approval is null) return null;
 
@@ -87,7 +84,7 @@ namespace BlueBerryFinance.API.Application.Features.AgentApproval
             approval.ResolvedAt = DateTime.UtcNow;
             approval.SetLastModification(DateTime.UtcNow);
 
-            await _db.SaveChangesAsync(ct);
+            await _db.SaveChangesAsync();
 
             return ToViewModel(approval);
         }
@@ -95,7 +92,7 @@ namespace BlueBerryFinance.API.Application.Features.AgentApproval
         // ── Tool dispatch ─────────────────────────────────────────────────────────
 
         private async Task ExecuteToolAsync(
-            Data.Entities.AgentApproval approval, Guid userId, CancellationToken ct)
+            Data.Entities.AgentApproval approval, Guid userId)
         {
             switch (approval.Tool)
             {
@@ -124,7 +121,7 @@ namespace BlueBerryFinance.API.Application.Features.AgentApproval
                             : DateTime.SpecifyKind(payload.TransactionDate, DateTimeKind.Utc)
                     };
 
-                    var transaction = await _transactionHandler.RegisterAsync(req, userId, ct);
+                    var transaction = await _transactionHandler.RegisterAsync(req, userId);
 
                     if (payload.Items?.Count > 0)
                     {
@@ -145,7 +142,7 @@ namespace BlueBerryFinance.API.Application.Features.AgentApproval
                             txItem.SetLastModification(now);
                             _db.TransactionItems.Add(txItem);
                         }
-                        await _db.SaveChangesAsync(ct);
+                        await _db.SaveChangesAsync();
                     }
                     break;
                 }
@@ -156,7 +153,7 @@ namespace BlueBerryFinance.API.Application.Features.AgentApproval
                     var payload = JsonSerializer.Deserialize<DeleteTransactionPayload>(approval.Payload, _jsonOptions)
                         ?? throw new InvalidOperationException($"Invalid {approval.Tool} payload.");
 
-                    await _transactionHandler.DeleteAsync(payload.TransactionId, userId, ct);
+                    await _transactionHandler.DeleteAsync(payload.TransactionId, userId);
                     break;
                 }
 
@@ -189,7 +186,7 @@ namespace BlueBerryFinance.API.Application.Features.AgentApproval
                             TransactionDate = date
                         };
 
-                        await _transactionHandler.RegisterAsync(req, userId, ct);
+                        await _transactionHandler.RegisterAsync(req, userId);
                     }
                     break;
                 }

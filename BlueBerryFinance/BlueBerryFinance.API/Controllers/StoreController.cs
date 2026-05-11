@@ -4,27 +4,23 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlueBerryFinance.API.Controllers
 {
-    [Route("api/v1.0/store")]
+    [Route("store")]
     [Authorize]
     public class StoreController : BaseController
     {
         private readonly IStoreHandler _handler;
-        private readonly ILogger<StoreController> _logger;
 
-        public StoreController(IStoreHandler handler, ILogger<StoreController> logger)
+        public StoreController(IStoreHandler handler)
         {
             _handler = handler;
-            _logger = logger;
         }
 
         [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Get([FromQuery] StoreFilterRequest filter, CancellationToken ct)
+        public async Task<IActionResult> Get([FromQuery] StoreFilterRequest filter)
         {
             try
             {
-                var result = await _handler.GetAsync(filter, ct);
+                var result = await _handler.GetAsync(filter);
 
                 if (filter.Id.HasValue && result.Count == 0)
                     return NotFound();
@@ -33,38 +29,35 @@ namespace BlueBerryFinance.API.Controllers
             }
             catch (Exception ex)
             {
-                return HandleException(ex, _logger);
+                return HandleException(ex);
             }
         }
 
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        public async Task<IActionResult> Register([FromBody] RegisterStoreRequest request, CancellationToken ct)
+        public async Task<IActionResult> Create([FromBody] RegisterStoreRequest request)
         {
             try
             {
-                var result = await _handler.RegisterAsync(request, ct);
+                var result = await _handler.RegisterAsync(request);
                 return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
             }
             catch (Exception ex)
             {
-                return HandleException(ex, _logger);
+                return HandleException(ex);
             }
         }
 
         [HttpDelete("{id:guid}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+        public async Task<IActionResult> Delete(Guid id)
         {
             try
             {
-                var deleted = await _handler.DeleteAsync(id, ct);
+                var deleted = await _handler.DeleteAsync(id);
                 return deleted ? NoContent() : NotFound();
             }
             catch (Exception ex)
             {
-                return HandleException(ex, _logger);
+                return HandleException(ex);
             }
         }
     }

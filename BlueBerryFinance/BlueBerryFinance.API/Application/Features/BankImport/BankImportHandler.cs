@@ -26,23 +26,22 @@ namespace BlueBerryFinance.API.Application.Features.BankImport
         public async Task<CsvImportResultViewModel> ImportAsync(
             Guid bankAccountId,
             Guid userId,
-            Stream csvStream,
-            CancellationToken ct = default)
+            Stream csvStream)
         {
             var result = new CsvImportResultViewModel();
 
             var account = await _db.BankAccounts
                 .AsNoTracking()
-                .FirstOrDefaultAsync(b => b.Id == bankAccountId && b.UserId == userId, ct)
+                .FirstOrDefaultAsync(b => b.Id == bankAccountId && b.UserId == userId)
                 ?? throw new KeyNotFoundException($"Bank account {bankAccountId} not found.");
 
-            var (categoryId, storeId) = await EnsureImportDefaultsAsync(userId, ct);
+            var (categoryId, storeId) = await EnsureImportDefaultsAsync(userId);
 
             var existing = await _db.Transactions
                 .AsNoTracking()
                 .Where(t => t.BankAccountId == bankAccountId && !t.IsDeleted)
                 .Select(t => new { t.TransactionDate, t.Amount, t.Description })
-                .ToListAsync(ct);
+                .ToListAsync();
 
             var existingSet = existing
                 .Select(t => DedupKey(t.TransactionDate, t.Amount, t.Description))
@@ -90,7 +89,7 @@ namespace BlueBerryFinance.API.Application.Features.BankImport
                 _db.Transactions.AddRange(toInsert);
                 try
                 {
-                    await _db.SaveChangesAsync(ct);
+                    await _db.SaveChangesAsync();
                 }
                 catch (DbUpdateException ex)
                 {
@@ -212,10 +211,10 @@ namespace BlueBerryFinance.API.Application.Features.BankImport
             return new CsvRow(date, desc, amount);
         }
 
-        private async Task<(Guid CategoryId, Guid StoreId)> EnsureImportDefaultsAsync(Guid userId, CancellationToken ct)
+        private async Task<(Guid CategoryId, Guid StoreId)> EnsureImportDefaultsAsync(Guid userId)
         {
             var category = await _db.Categories
-                .FirstOrDefaultAsync(c => c.Name == "Imported" && !c.IsDeleted, ct);
+                .FirstOrDefaultAsync(c => c.Name == "Imported" && !c.IsDeleted);
 
             if (category is null)
             {
@@ -230,11 +229,11 @@ namespace BlueBerryFinance.API.Application.Features.BankImport
                 category.SetInsertionDate(DateTime.UtcNow);
                 category.SetLastModification(DateTime.UtcNow);
                 _db.Categories.Add(category);
-                await _db.SaveChangesAsync(ct);
+                await _db.SaveChangesAsync();
             }
 
             var store = await _db.Stores
-                .FirstOrDefaultAsync(s => s.Name == "Unknown" && !s.IsDeleted, ct);
+                .FirstOrDefaultAsync(s => s.Name == "Unknown" && !s.IsDeleted);
 
             if (store is null)
             {
@@ -247,7 +246,7 @@ namespace BlueBerryFinance.API.Application.Features.BankImport
                 store.SetInsertionDate(DateTime.UtcNow);
                 store.SetLastModification(DateTime.UtcNow);
                 _db.Stores.Add(store);
-                await _db.SaveChangesAsync(ct);
+                await _db.SaveChangesAsync();
             }
 
             return (category.Id, store.Id);

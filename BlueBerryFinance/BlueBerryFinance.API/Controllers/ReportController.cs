@@ -4,30 +4,33 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlueBerryFinance.API.Controllers
 {
+    [Route("report")]
     [Authorize(Policy = "UserOrAdmin")]
     public class ReportController : BaseController
     {
         private readonly IReportHandler _handler;
-        private readonly ILogger<ReportController> _logger;
 
-        public ReportController(IReportHandler handler, ILogger<ReportController> logger)
+        public ReportController(IReportHandler handler)
         {
             _handler = handler;
-            _logger  = logger;
         }
 
-        [HttpGet("report/monthly")]
+        [HttpGet("monthly")]
         public async Task<IActionResult> GetMonthly(
-            [FromQuery] GetMonthlyReportRequest request, CancellationToken ct)
+            [FromQuery] GetMonthlyReportRequest request)
         {
             try
             {
-                var result = await _handler.GetMonthlyAsync(request.Year, request.Month, CurrentUserId, ct);
+                var result = await _handler.GetMonthlyAsync(
+                    request.Year,
+                    request.Month,
+                    CurrentUserId);
+
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                return HandleException(ex, _logger);
+                return HandleException(ex);
             }
         }
     }

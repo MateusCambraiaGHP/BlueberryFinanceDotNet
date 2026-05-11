@@ -27,10 +27,9 @@ namespace BlueBerryFinance.API.Infrastructure.Services
         public async Task<string> UploadAsync(
             Stream stream,
             string fileName,
-            string contentType,
-            CancellationToken ct = default)
+            string contentType)
         {
-            await EnsureBucketAsync(ct);
+            await EnsureBucketAsync();
 
             var prefix = contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase) ? "images" : "statements";
             var objectName = $"{prefix}/{DateTime.UtcNow:yyyy/MM}/{Guid.NewGuid()}/{fileName}";
@@ -42,14 +41,14 @@ namespace BlueBerryFinance.API.Infrastructure.Services
                 .WithObjectSize(stream.Length)
                 .WithContentType(contentType);
 
-            await _minio.PutObjectAsync(args, ct);
+            await _minio.PutObjectAsync(args);
 
             var url = $"{_opts.PublicBaseUrl.TrimEnd('/')}/{_opts.BucketName}/{objectName}";
             _logger.LogInformation("Uploaded file to MinIO: {Url}", url);
             return url;
         }
 
-        public async Task<Stream> DownloadAsync(string objectName, CancellationToken ct = default)
+        public async Task<Stream> DownloadAsync(string objectName)
         {
             var ms = new MemoryStream();
 
@@ -58,20 +57,20 @@ namespace BlueBerryFinance.API.Infrastructure.Services
                 .WithObject(objectName)
                 .WithCallbackStream(stream => stream.CopyTo(ms));
 
-            await _minio.GetObjectAsync(args, ct);
+            await _minio.GetObjectAsync(args);
             ms.Position = 0;
             return ms;
         }
 
-        private async Task EnsureBucketAsync(CancellationToken ct)
+        private async Task EnsureBucketAsync()
         {
             var exists = await _minio.BucketExistsAsync(
-                new BucketExistsArgs().WithBucket(_opts.BucketName), ct);
+                new BucketExistsArgs().WithBucket(_opts.BucketName));
 
             if (!exists)
             {
                 await _minio.MakeBucketAsync(
-                    new MakeBucketArgs().WithBucket(_opts.BucketName), ct);
+                    new MakeBucketArgs().WithBucket(_opts.BucketName));
                 _logger.LogInformation("Created MinIO bucket: {Bucket}", _opts.BucketName);
             }
         }

@@ -1,9 +1,7 @@
-using BlueBerryFinance.API.Application.Features.Chat;
 using BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools.Interfaces;
 using BlueBerryFinance.API.Infrastructure.Utils.Factories.Interfaces;
 using BlueBerryFinance.API.Infrastructure.Utils.Helpers.Interfaces;
 using Microsoft.Extensions.AI;
-using System.Runtime.CompilerServices;
 
 namespace BlueBerryFinance.API.Application.Features.Chat
 {
@@ -25,8 +23,7 @@ namespace BlueBerryFinance.API.Application.Features.Chat
 
         public async IAsyncEnumerable<string> StreamAsync(
             string prompt,
-            bool includeTools = true,
-            [EnumeratorCancellation] CancellationToken ct = default)
+            bool includeTools = true)
         {
             var client = _factory.CreateChatClient();
             var options = includeTools ? new ChatOptions { Tools = _tools } : new ChatOptions();
@@ -37,11 +34,11 @@ namespace BlueBerryFinance.API.Application.Features.Chat
                 new(ChatRole.User, prompt)
             };
 
-            while (!ct.IsCancellationRequested)
+            while (true)
             {
                 var updates = new List<ChatResponseUpdate>();
 
-                await foreach (var update in client.GetStreamingResponseAsync(messages, options, ct))
+                await foreach (var update in client.GetStreamingResponseAsync(messages, options))
                 {
                     foreach (var content in update.Contents ?? [])
                     {
@@ -80,7 +77,7 @@ namespace BlueBerryFinance.API.Application.Features.Chat
                                     ? new AIFunctionArguments(call.Arguments)
                                     : new AIFunctionArguments();
 
-                                var result = await tool.InvokeAsync(args, ct);
+                                var result = await tool.InvokeAsync(args);
                                 toolResult = result?.ToString() ?? string.Empty;
                             }
                             catch (Exception ex)

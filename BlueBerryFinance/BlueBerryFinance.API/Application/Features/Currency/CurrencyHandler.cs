@@ -14,7 +14,7 @@ namespace BlueBerryFinance.API.Application.Features.Currency
             _db = db;
         }
 
-        public async Task<IReadOnlyList<CurrencyViewModel>> ListAsync(CancellationToken ct = default)
+        public async Task<IReadOnlyList<CurrencyViewModel>> GetAsync()
         {
             return await _db.Currencies
                 .AsNoTracking()
@@ -25,7 +25,7 @@ namespace BlueBerryFinance.API.Application.Features.Currency
                     Symbol = c.Symbol,
                     Name = c.Name
                 })
-                .ToListAsync(ct);
+                .ToListAsync();
         }
     }
 }

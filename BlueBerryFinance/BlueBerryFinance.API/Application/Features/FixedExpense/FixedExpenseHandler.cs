@@ -14,7 +14,7 @@ namespace BlueBerryFinance.API.Application.Features.FixedExpense
         }
 
         public async Task<IReadOnlyList<FixedExpenseViewModel>> GetAsync(
-            FixedExpenseFilterRequest filter, Guid userId, CancellationToken ct = default)
+            FixedExpenseFilterRequest filter, Guid userId)
         {
             var query = _db.FixedExpenses
                 .AsNoTracking()
@@ -38,10 +38,10 @@ namespace BlueBerryFinance.API.Application.Features.FixedExpense
                     StoreName = f.Store.Name,
                     Active = f.Active == 1
                 })
-                .ToListAsync(ct);
+                .ToListAsync();
         }
 
-        public async Task<FixedExpenseViewModel> RegisterAsync(RegisterFixedExpenseRequest request, Guid userId, CancellationToken ct = default)
+        public async Task<FixedExpenseViewModel> RegisterAsync(RegisterFixedExpenseRequest request, Guid userId)
         {
             var entity = new Data.Entities.FixedExpense
             {
@@ -63,20 +63,20 @@ namespace BlueBerryFinance.API.Application.Features.FixedExpense
 
             try
             {
-                await _db.SaveChangesAsync(ct);
+                await _db.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
                 throw new InvalidOperationException("Failed to register fixed expense.", ex);
             }
 
-            return (await GetAsync(new FixedExpenseFilterRequest { Id = entity.Id }, userId, ct)).First();
+            return (await GetAsync(new FixedExpenseFilterRequest { Id = entity.Id }, userId)).First();
         }
 
-        public async Task<bool> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
+        public async Task<bool> DeleteAsync(Guid id, Guid userId)
         {
             var entity = await _db.FixedExpenses
-                .FirstOrDefaultAsync(f => f.Id == id && f.UserId == userId, ct);
+                .FirstOrDefaultAsync(f => f.Id == id && f.UserId == userId);
 
             if (entity is null) return false;
 
@@ -85,7 +85,7 @@ namespace BlueBerryFinance.API.Application.Features.FixedExpense
 
             try
             {
-                await _db.SaveChangesAsync(ct);
+                await _db.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {

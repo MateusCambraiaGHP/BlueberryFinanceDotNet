@@ -1,4 +1,3 @@
-using BlueBerryFinance.API.Application.Features.Report;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.API.Data.Entities.Enums;
 using BlueBerryFinance.Common.ViewModels;
@@ -16,42 +15,42 @@ namespace BlueBerryFinance.API.Application.Features.Report
         }
 
         public async Task<MonthlyReportViewModel> GetMonthlyAsync(
-            int year, int month, Guid userId, CancellationToken ct = default)
+            int year, int month, Guid userId)
         {
             var from = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
-            var to   = from.AddMonths(1);
+            var to = from.AddMonths(1);
 
             var transactions = await _db.Transactions
                 .AsNoTracking()
                 .Where(t => t.UserId == userId
                          && t.TransactionDate >= from
-                         && t.TransactionDate <  to)
+                         && t.TransactionDate < to)
                 .Select(t => new
                 {
                     t.TransactionType,
                     t.Amount,
-                    CategoryName  = t.Category.Name,
+                    CategoryName = t.Category.Name,
                     CategoryColor = t.Category.Color ?? "#888888",
-                    CategoryType  = t.Category.Type,
-                    StoreName     = t.Store.Name,
-                    CurrencyCode  = t.Currency.Code.ToString(),
-                    CurrencySymbol= t.Currency.Symbol
+                    CategoryType = t.Category.Type,
+                    StoreName = t.Store.Name,
+                    CurrencyCode = t.Currency.Code.ToString(),
+                    CurrencySymbol = t.Currency.Symbol
                 })
-                .ToListAsync(ct);
+                .ToListAsync();
 
             var totals = transactions
                 .GroupBy(t => t.CurrencyCode)
                 .Select(g =>
                 {
-                    var income  = g.Where(t => t.TransactionType == TransactionType.Income) .Sum(t => t.Amount);
+                    var income = g.Where(t => t.TransactionType == TransactionType.Income).Sum(t => t.Amount);
                     var expense = g.Where(t => t.TransactionType == TransactionType.Expense).Sum(t => t.Amount);
                     return new CurrencyTotalViewModel
                     {
-                        CurrencyCode   = g.Key,
+                        CurrencyCode = g.Key,
                         CurrencySymbol = g.First().CurrencySymbol,
-                        TotalIncome    = income,
-                        TotalExpense   = expense,
-                        Balance        = income - expense
+                        TotalIncome = income,
+                        TotalExpense = expense,
+                        Balance = income - expense
                     };
                 })
                 .OrderBy(x => x.CurrencyCode)
@@ -61,12 +60,12 @@ namespace BlueBerryFinance.API.Application.Features.Report
                 .GroupBy(t => (t.CategoryName, t.CategoryColor, t.CategoryType, t.CurrencyCode, t.CurrencySymbol))
                 .Select(g => new CategoryBreakdownViewModel
                 {
-                    CategoryName   = g.Key.CategoryName,
-                    CategoryColor  = g.Key.CategoryColor,
-                    Type           = g.Key.CategoryType,
-                    CurrencyCode   = g.Key.CurrencyCode,
+                    CategoryName = g.Key.CategoryName,
+                    CategoryColor = g.Key.CategoryColor,
+                    Type = g.Key.CategoryType,
+                    CurrencyCode = g.Key.CurrencyCode,
                     CurrencySymbol = g.Key.CurrencySymbol,
-                    Total          = g.Sum(t => t.Amount),
+                    Total = g.Sum(t => t.Amount),
                     TransactionCount = g.Count()
                 })
                 .OrderByDescending(x => x.Total)
@@ -76,10 +75,10 @@ namespace BlueBerryFinance.API.Application.Features.Report
                 .GroupBy(t => (t.StoreName, t.CurrencyCode, t.CurrencySymbol))
                 .Select(g => new StoreBreakdownViewModel
                 {
-                    StoreName      = g.Key.StoreName,
-                    CurrencyCode   = g.Key.CurrencyCode,
+                    StoreName = g.Key.StoreName,
+                    CurrencyCode = g.Key.CurrencyCode,
                     CurrencySymbol = g.Key.CurrencySymbol,
-                    Total          = g.Sum(t => t.Amount),
+                    Total = g.Sum(t => t.Amount),
                     TransactionCount = g.Count()
                 })
                 .OrderByDescending(x => x.Total)
@@ -88,11 +87,11 @@ namespace BlueBerryFinance.API.Application.Features.Report
 
             return new MonthlyReportViewModel
             {
-                Year       = year,
-                Month      = month,
-                Totals     = totals,
+                Year = year,
+                Month = month,
+                Totals = totals,
                 Categories = categories,
-                Stores     = stores
+                Stores = stores
             };
         }
     }

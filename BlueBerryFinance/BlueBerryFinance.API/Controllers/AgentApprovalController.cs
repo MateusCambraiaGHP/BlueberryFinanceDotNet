@@ -5,37 +5,36 @@ using Microsoft.AspNetCore.Mvc;
 namespace BlueBerryFinance.API.Controllers
 {
     [Authorize(Policy = "UserOrAdmin")]
+    [Route("agent-approvals")]
     public class AgentApprovalController : BaseController
     {
         private readonly IAgentApprovalHandler _handler;
-        private readonly ILogger<AgentApprovalController> _logger;
 
-        public AgentApprovalController(IAgentApprovalHandler handler, ILogger<AgentApprovalController> logger)
+        public AgentApprovalController(IAgentApprovalHandler handler)
         {
             _handler = handler;
-            _logger = logger;
         }
 
-        [HttpGet("agent-approvals/pending")]
-        public async Task<IActionResult> GetPending(CancellationToken ct)
+        [HttpGet("pending")]
+        public async Task<IActionResult> GetPending()
         {
             try
             {
-                var items = await _handler.ListPendingAsync(CurrentUserId, ct);
+                var items = await _handler.ListPendingAsync(CurrentUserId);
                 return Ok(items);
             }
             catch (Exception ex)
             {
-                return HandleException(ex, _logger);
+                return HandleException(ex);
             }
         }
 
-        [HttpPost("agent-approvals/{id:guid}/approve")]
-        public async Task<IActionResult> Approve(Guid id, CancellationToken ct)
+        [HttpPost("{id:guid}/approve")]
+        public async Task<IActionResult> Approve(Guid id)
         {
             try
             {
-                var result = await _handler.ApproveAsync(id, CurrentUserId, ct);
+                var result = await _handler.ApproveAsync(id, CurrentUserId);
 
                 if (result is null)
                     return NotFound(new { message = "Approval not found." });
@@ -48,16 +47,16 @@ namespace BlueBerryFinance.API.Controllers
             }
             catch (Exception ex)
             {
-                return HandleException(ex, _logger);
+                return HandleException(ex);
             }
         }
 
-        [HttpPost("agent-approvals/{id:guid}/reject")]
-        public async Task<IActionResult> Reject(Guid id, CancellationToken ct)
+        [HttpPost("{id:guid}/reject")]
+        public async Task<IActionResult> Reject(Guid id)
         {
             try
             {
-                var result = await _handler.RejectAsync(id, CurrentUserId, ct);
+                var result = await _handler.RejectAsync(id, CurrentUserId);
 
                 if (result is null)
                     return NotFound(new { message = "Approval not found." });
@@ -70,7 +69,7 @@ namespace BlueBerryFinance.API.Controllers
             }
             catch (Exception ex)
             {
-                return HandleException(ex, _logger);
+                return HandleException(ex);
             }
         }
     }
