@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Application.Responses;
+using BlueBerryFinance.API.Application.Features.BankImport;
 using BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Interfaces;
 using BlueBerryFinance.API.Infrastructure.Utils.Factories.Interfaces;
 using BlueBerryFinance.API.Infrastructure.Utils.Helpers.Interfaces;

@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Application.Responses;
+using BlueBerryFinance.API.Application.Features.AgentApproval;
 using BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Interfaces;
 using BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools;
 using BlueBerryFinance.API.Infrastructure.Utils.Factories.Interfaces;

@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace BlueBerryFinance.API.Application.Responses
+namespace BlueBerryFinance.API.Application.Features.AgentApproval
 {
     public class SecurityValidationResult
     {
