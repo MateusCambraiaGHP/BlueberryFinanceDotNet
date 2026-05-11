@@ -16,6 +16,7 @@ namespace BlueBerryFinance.API.Data.Context
         public DbSet<Transaction> Transactions => Set<Transaction>();
         public DbSet<FiscalNote> FiscalNotes => Set<FiscalNote>();
         public DbSet<AgentApproval> AgentApprovals => Set<AgentApproval>();
+        public DbSet<TransactionItem> TransactionItems => Set<TransactionItem>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -105,6 +106,17 @@ namespace BlueBerryFinance.API.Data.Context
                 e.Property(x => x.ExtractedData).HasColumnType("jsonb");
                 e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
                 e.HasOne(x => x.Transaction).WithMany().HasForeignKey(x => x.TransactionId).OnDelete(DeleteBehavior.SetNull).IsRequired(false);
+                e.HasQueryFilter(x => !x.IsDeleted);
+            });
+
+            modelBuilder.Entity<TransactionItem>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Name).HasMaxLength(512).IsRequired();
+                e.Property(x => x.Quantity).HasPrecision(18, 4);
+                e.Property(x => x.UnitPrice).HasPrecision(18, 2);
+                e.Property(x => x.TotalPrice).HasPrecision(18, 2);
+                e.HasOne(x => x.Transaction).WithMany(t => t.Items).HasForeignKey(x => x.TransactionId).OnDelete(DeleteBehavior.Cascade);
                 e.HasQueryFilter(x => !x.IsDeleted);
             });
 

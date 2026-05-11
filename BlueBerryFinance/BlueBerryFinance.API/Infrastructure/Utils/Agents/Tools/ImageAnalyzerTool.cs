@@ -41,8 +41,13 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
             "- currency: ISO 4217 currency code (e.g. EUR, BRL, USD)\n" +
             "- country: ISO 3166-1 alpha-2 country code (e.g. PT, BR, US)\n" +
             "- description: brief description of the purchase\n" +
-            "- transactionDate: date of the transaction in YYYY-MM-DD format\n\n" +
-            "Return ONLY a JSON object with these fields. If a field cannot be determined, use null.";
+            "- transactionDate: date of the transaction in YYYY-MM-DD format\n" +
+            "- items: array of individual line items, each with:\n" +
+            "    - name: product or item name\n" +
+            "    - quantity: quantity purchased (decimal)\n" +
+            "    - unitPrice: price per unit (decimal)\n" +
+            "    - totalPrice: quantity × unitPrice (decimal)\n\n" +
+            "Return ONLY a JSON object with these fields. If items cannot be determined, use an empty array. If any other field cannot be determined, use null.";
 
         public ImageAnalyzerTool(
             AppDbContext db,
@@ -202,9 +207,15 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
                 ? d
                 : now;
 
+            var itemPayloads = receiptData.Items?
+                .Where(i => !string.IsNullOrWhiteSpace(i.Name))
+                .Select(i => new TransactionItemPayload(i.Name, i.Quantity, i.UnitPrice, i.TotalPrice))
+                .ToList();
+
             var payload = new CreateTransactionPayload(
                 bankAccountId, storeId, categoryId, currencyId, null,
-                "Store", "Expense", receiptData.TotalAmount.Value, description, transactionDate);
+                "Store", "Expense", receiptData.TotalAmount.Value, description, transactionDate,
+                itemPayloads?.Count > 0 ? itemPayloads : null);
 
             var approval = new AgentApproval
             {
@@ -262,6 +273,15 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
             public string? Country { get; set; }
             public string? Description { get; set; }
             public string? TransactionDate { get; set; }
+            public IList<ImageReceiptItem>? Items { get; set; }
+        }
+
+        private sealed class ImageReceiptItem
+        {
+            public string Name { get; set; } = string.Empty;
+            public decimal Quantity { get; set; }
+            public decimal UnitPrice { get; set; }
+            public decimal TotalPrice { get; set; }
         }
     }
 }

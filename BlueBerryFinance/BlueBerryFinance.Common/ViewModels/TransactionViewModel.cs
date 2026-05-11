@@ -21,5 +21,6 @@ namespace BlueBerryFinance.Common.ViewModels
         public string? ImageUrl { get; set; }
         public string CorrelationId { get; set; } = string.Empty;
         public DateTime InsertionDate { get; set; }
+        public IList<TransactionItemViewModel> Items { get; set; } = [];
     }
 }

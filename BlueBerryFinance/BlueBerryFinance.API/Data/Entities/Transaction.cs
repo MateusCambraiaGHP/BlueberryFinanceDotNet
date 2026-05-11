@@ -26,6 +26,7 @@ namespace BlueBerryFinance.API.Data.Entities
         public Category Category { get; set; } = null!;
         public Currency Currency { get; set; } = null!;
         public FixedExpense? FixedExpense { get; set; }
+        public ICollection<TransactionItem> Items { get; set; } = [];
 
         public Transaction() { }
     }

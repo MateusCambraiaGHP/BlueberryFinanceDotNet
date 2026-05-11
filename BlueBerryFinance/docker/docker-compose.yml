@@ -1,3 +1,5 @@
+name: blueberry-finance-local
+
 services:
 
   local-dev-postgres:

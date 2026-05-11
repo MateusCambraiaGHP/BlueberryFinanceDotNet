@@ -1,0 +1,109 @@
+@using BlueBerryFinance.Common.ViewModels
+@inject MudBlazor.IDialogService DialogService
+
+<MudDialog Style="min-width:480px;max-width:680px">
+    <DialogContent>
+        @if (_loading)
+        {
+            <div style="display:flex;justify-content:center;padding:32px">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            </div>
+        }
+        else if (_tx is null)
+        {
+            <MudAlert Severity="Severity.Error">Could not load transaction details.</MudAlert>
+        }
+        else
+        {
+            <!-- Header summary -->
+            <MudStack Spacing="0" Class="mb-4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                    <MudText Typo="Typo.h6" Style="font-weight:700;color:#0f1b2d">@_tx.StoreName</MudText>
+                    <MudText Typo="Typo.h6"
+                             Style="@(_tx.TransactionType == "Income" ? "font-weight:700;color:#38a169" : "font-weight:700;color:#e53e3e")">
+                        @(_tx.TransactionType == "Income" ? "+" : "-")@_tx.CurrencySymbol@_tx.Amount.ToString("N2")
+                    </MudText>
+                </MudStack>
+                <MudStack Row="true" Spacing="3" Class="mt-1">
+                    <MudText Typo="Typo.caption" Style="color:#6b7280">
+                        @_tx.TransactionDate.ToString("dd MMM yyyy")
+                    </MudText>
+                    <MudText Typo="Typo.caption" Style="color:#6b7280">@_tx.BankAccountName</MudText>
+                    <MudChip T="string" Size="Size.Small"
+                             Style="@($"background:{_tx.CategoryColor}22;color:{_tx.CategoryColor};font-size:.72rem;height:20px;padding:0 8px")">
+                        @_tx.CategoryName
+                    </MudChip>
+                </MudStack>
+                @if (!string.IsNullOrWhiteSpace(_tx.Description) && _tx.Description != _tx.StoreName)
+                {
+                    <MudText Typo="Typo.body2" Style="color:#374151;margin-top:4px">@_tx.Description</MudText>
+                }
+            </MudStack>
+
+            <MudDivider Class="mb-4" />
+
+            <!-- Items -->
+            @if (_tx.Items.Count > 0)
+            {
+                <MudText Typo="Typo.subtitle2" Style="font-weight:600;color:#0f1b2d;margin-bottom:10px">
+                    Items (@_tx.Items.Count)
+                </MudText>
+                <div style="border:1px solid #f3f4f6;border-radius:8px;overflow:hidden">
+                    <table style="width:100%;border-collapse:collapse;font-size:.85rem">
+                        <thead>
+                            <tr style="background:#f9fafb;border-bottom:1px solid #f3f4f6">
+                                <th style="text-align:left;padding:8px 12px;color:#6b7280;font-weight:600">Product</th>
+                                <th style="text-align:center;padding:8px 12px;color:#6b7280;font-weight:600">Qty</th>
+                                <th style="text-align:right;padding:8px 12px;color:#6b7280;font-weight:600">Unit Price</th>
+                                <th style="text-align:right;padding:8px 12px;color:#6b7280;font-weight:600">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in _tx.Items)
+                            {
+                                <tr style="border-bottom:1px solid #f9fafb">
+                                    <td style="padding:8px 12px;color:#374151">@item.Name</td>
+                                    <td style="padding:8px 12px;color:#6b7280;text-align:center">@item.Quantity.ToString("G29")</td>
+                                    <td style="padding:8px 12px;color:#6b7280;text-align:right">@_tx.CurrencySymbol@item.UnitPrice.ToString("N2")</td>
+                                    <td style="padding:8px 12px;color:#374151;font-weight:600;text-align:right">@_tx.CurrencySymbol@item.TotalPrice.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr style="background:#f9fafb;border-top:2px solid #e5e7eb">
+                                <td colspan="3" style="padding:8px 12px;color:#374151;font-weight:600">Total</td>
+                                <td style="padding:8px 12px;color:#0f1b2d;font-weight:700;text-align:right">
+                                    @_tx.CurrencySymbol@_tx.Amount.ToString("N2")
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Style="color:#9ca3af;font-style:italic">
+                    No item breakdown available for this transaction.
+                </MudText>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Close())" Variant="Variant.Text">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public Guid TransactionId { get; set; }
+    [Parameter] public Func<Guid, Task<TransactionViewModel?>> FetchAsync { get; set; } = null!;
+
+    TransactionViewModel? _tx;
+    bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _tx = await FetchAsync(TransactionId);
+        _loading = false;
+    }
+}

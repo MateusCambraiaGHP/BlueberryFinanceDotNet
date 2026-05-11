@@ -126,7 +126,14 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
             string TransactionType,
             decimal Amount,
             string Description,
-            DateTime TransactionDate);
+            DateTime TransactionDate,
+            IList<TransactionItemPayload>? Items = null);
+
+        public record TransactionItemPayload(
+            string Name,
+            decimal Quantity,
+            decimal UnitPrice,
+            decimal TotalPrice);
 
         public record DeleteTransactionPayload(Guid TransactionId);
     }

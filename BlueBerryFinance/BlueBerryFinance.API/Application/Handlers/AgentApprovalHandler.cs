@@ -1,6 +1,7 @@
 using BlueBerryFinance.API.Application.Handlers.Interfaces;
 using BlueBerryFinance.API.Application.Requests.Transaction;
 using BlueBerryFinance.API.Data.Context;
+using BlueBerryFinance.API.Data.Entities;
 using BlueBerryFinance.API.Data.Entities.Enums;
 using BlueBerryFinance.Common.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -123,7 +124,29 @@ namespace BlueBerryFinance.API.Application.Handlers
                             : DateTime.SpecifyKind(payload.TransactionDate, DateTimeKind.Utc)
                     };
 
-                    await _transactionHandler.RegisterAsync(req, userId, ct);
+                    var transaction = await _transactionHandler.RegisterAsync(req, userId, ct);
+
+                    if (payload.Items?.Count > 0)
+                    {
+                        var now = DateTime.UtcNow;
+                        foreach (var item in payload.Items)
+                        {
+                            var txItem = new TransactionItem
+                            {
+                                Id = Guid.NewGuid(),
+                                TransactionId = transaction.Id,
+                                Name = item.Name,
+                                Quantity = item.Quantity,
+                                UnitPrice = item.UnitPrice,
+                                TotalPrice = item.TotalPrice,
+                                Active = 1
+                            };
+                            txItem.SetInsertionDate(now);
+                            txItem.SetLastModification(now);
+                            _db.TransactionItems.Add(txItem);
+                        }
+                        await _db.SaveChangesAsync(ct);
+                    }
                     break;
                 }
 

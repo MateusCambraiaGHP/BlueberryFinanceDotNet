@@ -79,6 +79,7 @@ namespace BlueBerryFinance.API.Application.Handlers
         {
             return await _db.Transactions
                 .AsNoTracking()
+                .Include(t => t.Items)
                 .Where(t => t.Id == id && t.UserId == userId)
                 .Select(t => new TransactionViewModel
                 {
@@ -100,7 +101,16 @@ namespace BlueBerryFinance.API.Application.Handlers
                     TransactionDate = t.TransactionDate,
                     ImageUrl = t.ImageUrl,
                     CorrelationId = t.CorrelationId,
-                    InsertionDate = t.InsertionDate
+                    InsertionDate = t.InsertionDate,
+                    Items = t.Items.Select(i => new TransactionItemViewModel
+                    {
+                        Id = i.Id,
+                        TransactionId = i.TransactionId,
+                        Name = i.Name,
+                        Quantity = i.Quantity,
+                        UnitPrice = i.UnitPrice,
+                        TotalPrice = i.TotalPrice
+                    }).ToList()
                 })
                 .FirstOrDefaultAsync(ct);
         }

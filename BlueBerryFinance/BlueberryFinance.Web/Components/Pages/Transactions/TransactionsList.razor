@@ -171,6 +171,8 @@
                 </MudText>
             </MudTd>
             <MudTd Style="white-space:nowrap">
+                <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Size="Size.Small" Title="View details"
+                               OnClick="@(() => ShowDetailAsync(context.Id))" />
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Title="Edit"
                                OnClick="@(() => StartEdit(context))" />
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Title="Delete"
@@ -318,6 +320,17 @@
         {
             _saving = false;
         }
+    }
+
+    private async Task ShowDetailAsync(Guid id)
+    {
+        var parameters = new DialogParameters<TransactionDetailDialog>
+        {
+            { x => x.TransactionId, id },
+            { x => x.FetchAsync, (Guid txId) => TransactionClient.GetByIdAsync(txId) }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        await DialogService.ShowAsync<TransactionDetailDialog>("Transaction Detail", parameters, options);
     }
 
     private void StartEdit(TransactionViewModel t)

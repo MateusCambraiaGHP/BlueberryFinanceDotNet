@@ -133,7 +133,6 @@ try
     builder.Services.AddScoped<IBlueberryFinanceAgent, BlueberryFinanceAgent>();
 
     // ── Application handlers ───────────────────────────────────────────────────
-    builder.Services.AddScoped<IAuthHandler, AuthHandler>();
     builder.Services.AddScoped<IAgentApprovalHandler, AgentApprovalHandler>();
     builder.Services.AddScoped<IChatHandler, ChatHandler>();
     builder.Services.AddScoped<ITransactionHandler, TransactionHandler>();

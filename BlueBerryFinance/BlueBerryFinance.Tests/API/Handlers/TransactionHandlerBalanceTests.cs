@@ -12,7 +12,13 @@ namespace BlueBerryFinance.Tests.API.Handlers
 {
     public class TransactionHandlerBalanceTests
     {
-        private static async Task<(AppDbContext db, User user, BankAccount account, Store store, Category category, Currency currency)>
+        private static async Task<(
+            AppDbContext db, 
+            User user, 
+            BankAccount account, 
+            Store store, 
+            Category category, 
+            Currency currency)>
             SeedAsync(IServiceProvider sp)
         {
             var db = sp.GetRequiredService<AppDbContext>();
