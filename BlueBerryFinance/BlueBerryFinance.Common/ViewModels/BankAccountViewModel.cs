@@ -11,5 +11,27 @@ namespace BlueBerryFinance.Common.ViewModels
         public string CurrencySymbol { get; set; } = string.Empty;
         public decimal Balance { get; set; }
         public bool Active { get; set; }
+
+        public BankAccountViewModel(
+            Guid id,
+            Guid userId,
+            string name,
+            string bank,
+            string country,
+            string currencyCode,
+            string currencySymbol,
+            decimal balance,
+            bool active)
+        {
+            Id = id;
+            UserId = userId;
+            Name = name;
+            Bank = bank;
+            Country = country;
+            CurrencyCode = currencyCode;
+            CurrencySymbol = currencySymbol;
+            Balance = balance;
+            Active = active;
+        }
     }
 }

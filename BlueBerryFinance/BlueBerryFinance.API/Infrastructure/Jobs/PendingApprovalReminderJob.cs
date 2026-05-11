@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Data.Entities.Enums;
+using BlueBerryFinance.API.Domain.Entities.Enums;
 using BlueBerryFinance.API.Infrastructure.Messaging;
 using Microsoft.EntityFrameworkCore;
 

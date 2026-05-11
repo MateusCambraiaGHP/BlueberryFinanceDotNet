@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Application.Features.Chat;
+using BlueBerryFinance.API.Application.Features.Chats;
 using Microsoft.Extensions.AI;
 
 namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools.Interfaces

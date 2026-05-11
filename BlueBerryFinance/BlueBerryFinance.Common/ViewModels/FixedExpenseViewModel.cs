@@ -13,5 +13,31 @@ namespace BlueBerryFinance.Common.ViewModels
         public bool IsRecurring { get; set; }
         public string StoreName { get; set; } = string.Empty;
         public bool Active { get; set; }
+
+        public FixedExpenseViewModel(
+            Guid id,
+            Guid userId,
+            string name,
+            string description,
+            decimal amount,
+            string currencyCode,
+            string currencySymbol,
+            int dayOfMonth,
+            bool isRecurring,
+            string storeName,
+            bool active)
+        {
+            Id = id;
+            UserId = userId;
+            Name = name;
+            Description = description;
+            Amount = amount;
+            CurrencyCode = currencyCode;
+            CurrencySymbol = currencySymbol;
+            DayOfMonth = dayOfMonth;
+            IsRecurring = isRecurring;
+            StoreName = storeName;
+            Active = active;
+        }
     }
 }

@@ -19,4 +19,15 @@
         public const string O1Preview = "o1-preview";
         public const string O3Mini = "o3-mini";
     }
+
+    public static class AgentTools
+    {
+        public const string SaveIncomeExpense = "save_income_expense";
+        public const string AnalyzeImage = "analyze_image";
+        public const string CreateTransaction = "create_transaction";
+        public const string DeleteIncomeExpense = "delete_income_expense";
+        public const string DeleteTransaction = "delete_transaction";
+        public const string ProcessPdfExtract = "process_pdf_extract";
+        public const string ProcessBankStatement = "process_bank_statement";
+    }
 }

@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Data.Entities;
+using BlueBerryFinance.API.Domain.Entities;
 using BlueBerryFinance.API.Infrastructure.Models;
 using BlueBerryFinance.API.Infrastructure.Services.Interfaces;
 using Microsoft.Extensions.Options;

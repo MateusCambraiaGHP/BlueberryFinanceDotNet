@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Application.Features.AgentApproval;
+using BlueBerryFinance.API.Application.Features.AgentApprovals;
 
 namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Interfaces
 {

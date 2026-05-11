@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Data.Entities;
+using BlueBerryFinance.API.Domain.Entities;
 
 namespace BlueBerryFinance.API.Infrastructure.Services.Interfaces
 {

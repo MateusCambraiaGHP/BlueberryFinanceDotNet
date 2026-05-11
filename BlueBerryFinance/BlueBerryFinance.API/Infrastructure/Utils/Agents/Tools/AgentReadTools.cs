@@ -1,5 +1,5 @@
 using BlueBerryFinance.API.Data.Context;
-using BlueBerryFinance.API.Data.Entities.Enums;
+using BlueBerryFinance.API.Domain.Entities.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using System.ComponentModel;

@@ -1,6 +1,6 @@
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.API.Data.Entities;
-using BlueBerryFinance.API.Data.Entities.Enums;
+using BlueBerryFinance.API.Domain.Entities.Enums;
 using BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Interfaces;
 using Microsoft.Extensions.AI;
 using System.ComponentModel;
@@ -10,13 +10,6 @@ using System.Text.Json.Serialization;
 
 namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
 {
-    /// <summary>
-    /// DB Save Tool — internal write operations.
-    /// These tools are NOT registered on the orchestrator agent.
-    /// They are used by orchestrator tools (IncomeExpenseSaverTool, ExtractProcessorTool, etc.)
-    /// which call the DB directly rather than through this wrapper.
-    /// Kept for AgentApprovalHandler payload type sharing and DI compatibility.
-    /// </summary>
     public class AgentWriteTools : IAgentWriteTools
     {
         private readonly AppDbContext _db;
@@ -36,9 +29,6 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
             _httpContextAccessor = httpContextAccessor;
         }
 
-        /// <summary>
-        /// Returns legacy write tools. Not registered on the orchestrator agent.
-        /// </summary>
         public IList<AITool> GetTools() =>
         [
             AIFunctionFactory.Create(CreateTransactionAsync, "create_transaction",

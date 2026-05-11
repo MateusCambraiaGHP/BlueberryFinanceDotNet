@@ -1,5 +1,6 @@
-using BlueBerryFinance.API.Application.Features.AgentApproval;
+using BlueBerryFinance.API.Application.Features.AgentApprovals;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlueBerryFinance.API.Controllers
@@ -11,17 +12,19 @@ namespace BlueBerryFinance.API.Controllers
         private readonly IAgentApprovalHandler _handler;
 
         public AgentApprovalController(IAgentApprovalHandler handler)
-        {
-            _handler = handler;
-        }
+            => _handler = handler;
 
         [HttpGet("pending")]
-        public async Task<IActionResult> GetPending()
+        public async Task<IActionResult> Get(AgentApprovalFilterRequest filter)
         {
             try
             {
-                var items = await _handler.ListPendingAsync(CurrentUserId);
-                return Ok(items);
+                var response = await _handler.GetAsync(CurrentUserId, filter);
+
+                if (!response.Success)
+                    return BadRequest(response);
+
+                return Ok(response);
             }
             catch (Exception ex)
             {
@@ -34,12 +37,12 @@ namespace BlueBerryFinance.API.Controllers
         {
             try
             {
-                var result = await _handler.ApproveAsync(id, CurrentUserId);
+                var response = await _handler.ApproveAsync(id, CurrentUserId);
 
-                if (result is null)
-                    return NotFound(new { message = "Approval not found." });
+                if (!response.Success)
+                    return BadRequest(response);
 
-                return Ok(result);
+                return Ok(response);
             }
             catch (InvalidOperationException ex)
             {
@@ -56,12 +59,12 @@ namespace BlueBerryFinance.API.Controllers
         {
             try
             {
-                var result = await _handler.RejectAsync(id, CurrentUserId);
+                var response = await _handler.RejectAsync(id, CurrentUserId);
 
-                if (result is null)
-                    return NotFound(new { message = "Approval not found." });
+                if (!response.Success)
+                    return BadRequest(response);
 
-                return Ok(result);
+                return Ok(response);
             }
             catch (InvalidOperationException ex)
             {

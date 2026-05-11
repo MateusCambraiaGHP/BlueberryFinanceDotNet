@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Application.Features.BankImport;
+using BlueBerryFinance.API.Application.Features.BankImports;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

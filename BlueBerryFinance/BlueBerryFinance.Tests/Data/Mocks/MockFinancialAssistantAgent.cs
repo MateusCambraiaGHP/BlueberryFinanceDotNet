@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Application.Features.Chat;
+using BlueBerryFinance.API.Application.Features.Chats;
 using BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Interfaces;
 
 namespace BlueBerryFinance.Tests.Data.Mocks

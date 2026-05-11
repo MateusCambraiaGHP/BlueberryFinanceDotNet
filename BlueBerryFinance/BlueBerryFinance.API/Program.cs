@@ -1,15 +1,16 @@
-using BlueBerryFinance.API.Application.Features.AgentApproval;
-using BlueBerryFinance.API.Application.Features.BankAccount;
-using BlueBerryFinance.API.Application.Features.BankImport;
-using BlueBerryFinance.API.Application.Features.Category;
-using BlueBerryFinance.API.Application.Features.Chat;
-using BlueBerryFinance.API.Application.Features.Currency;
-using BlueBerryFinance.API.Application.Features.FixedExpense;
-using BlueBerryFinance.API.Application.Features.Report;
-using BlueBerryFinance.API.Application.Features.Store;
-using BlueBerryFinance.API.Application.Features.Transaction;
+using BlueBerryFinance.API.Application.Features.AgentApprovals;
+using BlueBerryFinance.API.Application.Features.BankAccounts;
+using BlueBerryFinance.API.Application.Features.BankImports;
+using BlueBerryFinance.API.Application.Features.Categories;
+using BlueBerryFinance.API.Application.Features.Chats;
+using BlueBerryFinance.API.Application.Features.Currencies;
+using BlueBerryFinance.API.Application.Features.FixedExpenses;
+using BlueBerryFinance.API.Application.Features.Reports;
+using BlueBerryFinance.API.Application.Features.Stores;
+using BlueBerryFinance.API.Application.Features.Transactions;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.API.Data.Entities;
+using BlueBerryFinance.API.Domain.Entities.Enums;
 using BlueBerryFinance.API.Infrastructure.Jobs;
 using BlueBerryFinance.API.Infrastructure.Messaging;
 using BlueBerryFinance.API.Infrastructure.Messaging.Consumers;
@@ -244,8 +245,8 @@ static async Task SeedAsync(AppDbContext db, IConfiguration config, Microsoft.Ex
     if (!db.Currencies.Any())
     {
         db.Currencies.AddRange(
-            new Currency { Code = BlueBerryFinance.API.Data.Entities.Enums.CurrencyCode.BRL, Symbol = "R$", Name = "Brazilian Real", Active = 1 },
-            new Currency { Code = BlueBerryFinance.API.Data.Entities.Enums.CurrencyCode.EUR, Symbol = "€", Name = "Euro", Active = 1 }
+            new Currency { Code = CurrencyCode.BRL, Symbol = "R$", Name = "Brazilian Real", Active = 1 },
+            new Currency { Code = CurrencyCode.EUR, Symbol = "€", Name = "Euro", Active = 1 }
         );
         foreach (var c in db.Currencies.Local)
         {

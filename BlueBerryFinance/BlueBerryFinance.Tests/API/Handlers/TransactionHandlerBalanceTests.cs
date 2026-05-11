@@ -1,7 +1,7 @@
 using BlueBerryFinance.API.Application.Features.Transaction;
 using BlueBerryFinance.API.Data.Context;
-using BlueBerryFinance.API.Data.Entities;
-using BlueBerryFinance.API.Data.Entities.Enums;
+using BlueBerryFinance.API.Domain.Entities;
+using BlueBerryFinance.API.Domain.Entities.Enums;
 using BlueBerryFinance.Tests.Data;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;

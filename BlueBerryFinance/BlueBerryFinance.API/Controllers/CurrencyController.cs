@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Application.Features.Currency;
+using BlueBerryFinance.API.Application.Features.Currencies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,8 +20,12 @@ namespace BlueBerryFinance.API.Controllers
         {
             try
             {
-                var result = await _handler.GetAsync();
-                return Ok(result);
+                var response = await _handler.GetAsync();
+                
+                if (!response.Success)
+                    return BadRequest(response);
+
+                return Ok(response);
             }
             catch (Exception ex)
             {

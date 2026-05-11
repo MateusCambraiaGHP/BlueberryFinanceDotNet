@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Application.Features.Report;
+using BlueBerryFinance.API.Application.Features.Reports;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,12 +21,15 @@ namespace BlueBerryFinance.API.Controllers
         {
             try
             {
-                var result = await _handler.GetMonthlyAsync(
+                var response = await _handler.GetMonthlyAsync(
                     request.Year,
                     request.Month,
                     CurrentUserId);
 
-                return Ok(result);
+                if (!response.Success)
+                    return BadRequest(response);
+
+                return Ok(response);
             }
             catch (Exception ex)
             {

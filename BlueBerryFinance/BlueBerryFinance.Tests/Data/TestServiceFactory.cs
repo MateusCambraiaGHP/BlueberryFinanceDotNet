@@ -1,8 +1,8 @@
-using BlueBerryFinance.API.Application.Features.BankAccount;
-using BlueBerryFinance.API.Application.Features.Category;
-using BlueBerryFinance.API.Application.Features.FixedExpense;
-using BlueBerryFinance.API.Application.Features.Store;
-using BlueBerryFinance.API.Application.Features.Transaction;
+using BlueBerryFinance.API.Application.Features.BankAccounts;
+using BlueBerryFinance.API.Application.Features.Categories;
+using BlueBerryFinance.API.Application.Features.FixedExpenses;
+using BlueBerryFinance.API.Application.Features.Stores;
+using BlueBerryFinance.API.Application.Features.Transactions;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.API.Infrastructure.Models;
 using BlueBerryFinance.API.Infrastructure.Services;

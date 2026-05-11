@@ -115,7 +115,6 @@ namespace BlueBerryFinance.API.Infrastructure.Middleware
 
             foreach (var field in SensitiveFields)
             {
-                // Simple regex-free redaction: replace known key patterns
                 json = System.Text.RegularExpressions.Regex.Replace(
                     json,
                     $@"(""{field}""\s*:\s*)""\S+""",

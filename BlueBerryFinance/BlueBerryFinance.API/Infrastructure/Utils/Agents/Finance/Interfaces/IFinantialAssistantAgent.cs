@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Application.Features.Chat;
+using BlueBerryFinance.API.Application.Features.Chats;
 
 namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Interfaces
 {

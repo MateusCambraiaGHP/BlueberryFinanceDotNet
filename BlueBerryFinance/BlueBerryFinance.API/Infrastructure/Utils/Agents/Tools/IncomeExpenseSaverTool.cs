@@ -1,6 +1,6 @@
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.API.Data.Entities;
-using BlueBerryFinance.API.Data.Entities.Enums;
+using BlueBerryFinance.API.Domain.Entities.Enums;
 using BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance.Interfaces;
 using BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools.Interfaces;
 using Microsoft.EntityFrameworkCore;

@@ -10,5 +10,25 @@ namespace BlueBerryFinance.Common.ViewModels
         public string Status { get; set; } = string.Empty;
         public DateTime? ResolvedAt { get; set; }
         public DateTime InsertionDate { get; set; }
+
+        public AgentApprovalViewModel(
+            Guid id,
+            Guid userId,
+            string agentName,
+            string tool,
+            string payload,
+            string status,
+            DateTime? resolvedAt,
+            DateTime insertionDate)
+        {
+            Id = id;
+            UserId = userId;
+            AgentName = agentName;
+            Tool = tool;
+            Payload = payload;
+            Status = status;
+            ResolvedAt = resolvedAt;
+            InsertionDate = insertionDate;
+        }
     }
 }

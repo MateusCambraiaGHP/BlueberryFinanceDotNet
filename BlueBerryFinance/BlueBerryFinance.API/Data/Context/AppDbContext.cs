@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Data.Entities;
+using BlueBerryFinance.API.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BlueBerryFinance.API.Data.Context

@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Application.Features.FixedExpense;
+using BlueBerryFinance.API.Application.Features.FixedExpenses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,12 +20,12 @@ namespace BlueBerryFinance.API.Controllers
         {
             try
             {
-                var result = await _handler.GetAsync(filter, CurrentUserId);
+                var response = await _handler.GetAsync(filter, CurrentUserId);
 
-                if (filter.Id.HasValue && result.Count == 0)
-                    return NotFound();
+                if (!response.Success)
+                    return BadRequest(response);
 
-                return Ok(result);
+                return Ok(response);
             }
             catch (Exception ex)
             {
@@ -38,8 +38,12 @@ namespace BlueBerryFinance.API.Controllers
         {
             try
             {
-                var result = await _handler.RegisterAsync(request, CurrentUserId);
-                return CreatedAtAction(nameof(Get), new { id = result.Id }, result);
+                var response = await _handler.CreateAsync(request, CurrentUserId);
+
+                if (!response.Success)
+                    return BadRequest(response);
+
+                return Ok(response);
             }
             catch (Exception ex)
             {
@@ -52,8 +56,12 @@ namespace BlueBerryFinance.API.Controllers
         {
             try
             {
-                var deleted = await _handler.DeleteAsync(id, CurrentUserId);
-                return deleted ? NoContent() : NotFound();
+                var response = await _handler.DeleteAsync(id, CurrentUserId);
+                
+                if (!response.Success)
+                    return BadRequest(response);
+
+                return Ok(response);
             }
             catch (Exception ex)
             {

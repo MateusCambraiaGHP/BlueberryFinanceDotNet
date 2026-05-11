@@ -1,4 +1,5 @@
 using BlueBerryFinance.API.Application.Features.Auth;
+using BlueBerryFinance.API.Application.Features.Auths;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.API.Infrastructure.Models;
 using BlueBerryFinance.API.Infrastructure.Services.Interfaces;

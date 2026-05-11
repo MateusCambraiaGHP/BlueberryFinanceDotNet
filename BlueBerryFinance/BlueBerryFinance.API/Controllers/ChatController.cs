@@ -1,4 +1,4 @@
-using BlueBerryFinance.API.Application.Features.Chat;
+using BlueBerryFinance.API.Application.Features.Chats;
 using BlueBerryFinance.API.Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
