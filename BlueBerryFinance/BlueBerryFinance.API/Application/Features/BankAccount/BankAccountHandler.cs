@@ -1,4 +1,3 @@
-using BlueBerryFinance.API.Application.Features.BankAccount;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.Common.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -14,11 +13,17 @@ namespace BlueBerryFinance.API.Application.Features.BankAccount
             _db = db;
         }
 
-        public async Task<IReadOnlyList<BankAccountViewModel>> ListAsync(Guid userId, CancellationToken ct = default)
+        public async Task<IReadOnlyList<BankAccountViewModel>> GetAsync(
+            BankAccountFilterRequest filter, Guid userId, CancellationToken ct = default)
         {
-            return await _db.BankAccounts
+            var query = _db.BankAccounts
                 .AsNoTracking()
-                .Where(b => b.UserId == userId)
+                .Where(b => b.UserId == userId);
+
+            if (filter.Id.HasValue)
+                query = query.Where(b => b.Id == filter.Id.Value);
+
+            return await query
                 .Select(b => new BankAccountViewModel
                 {
                     Id = b.Id,
@@ -32,26 +37,6 @@ namespace BlueBerryFinance.API.Application.Features.BankAccount
                     Active = b.Active == 1
                 })
                 .ToListAsync(ct);
-        }
-
-        public async Task<BankAccountViewModel?> GetByIdAsync(Guid id, Guid userId, CancellationToken ct = default)
-        {
-            return await _db.BankAccounts
-                .AsNoTracking()
-                .Where(b => b.Id == id && b.UserId == userId)
-                .Select(b => new BankAccountViewModel
-                {
-                    Id = b.Id,
-                    UserId = b.UserId,
-                    Name = b.Name,
-                    Bank = b.Bank.ToString(),
-                    Country = b.Country.ToString(),
-                    CurrencyCode = b.Currency.Code.ToString(),
-                    CurrencySymbol = b.Currency.Symbol,
-                    Balance = b.Balance,
-                    Active = b.Active == 1
-                })
-                .FirstOrDefaultAsync(ct);
         }
 
         public async Task<BankAccountViewModel> RegisterAsync(RegisterBankAccountRequest request, Guid userId, CancellationToken ct = default)
@@ -81,7 +66,7 @@ namespace BlueBerryFinance.API.Application.Features.BankAccount
                 throw new InvalidOperationException("Failed to register bank account.", ex);
             }
 
-            return (await GetByIdAsync(entity.Id, userId, ct))!;
+            return (await GetAsync(new BankAccountFilterRequest { Id = entity.Id }, userId, ct)).First();
         }
 
         public async Task<bool> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
