@@ -5,12 +5,6 @@ using BlueBerryFinance.API.Infrastructure.Utils.Helpers.Interfaces;
 
 namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance
 {
-    /// <summary>
-    /// Blueberry Finance orchestrator agent.
-    /// Streaming chat orchestration is handled by ChatHandler (using IOrchestratorTools).
-    /// Structured financial analysis is handled by FinancialAnalysisTool.
-    /// This class fulfils the IBlueberryFinanceAgent contract for direct structured calls.
-    /// </summary>
     public class BlueberryFinanceAgent : AgentBase<FinancialAnalysisResponse>, IBlueberryFinanceAgent
     {
         public BlueberryFinanceAgent(

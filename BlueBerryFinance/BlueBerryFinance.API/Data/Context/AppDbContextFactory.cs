@@ -3,13 +3,22 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace BlueBerryFinance.API.Data.Context
 {
-    // Used by EF Core design-time tools (dotnet ef migrations add)
     public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
     {
         public AppDbContext CreateDbContext(string[] args)
         {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile("appsettings.Development.json", optional: true)
+                .AddEnvironmentVariables()
+                .Build();
+
+            var connectionString = configuration.GetConnectionString("MainDb")
+                ?? throw new InvalidOperationException("Connection string 'Default' not found.");
+
             var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseNpgsql("Host=localhost;Database=blueberry_finance;Username=blueberry;Password=ChangeMe123!")
+                .UseNpgsql(connectionString)
                 .Options;
 
             return new AppDbContext(options);

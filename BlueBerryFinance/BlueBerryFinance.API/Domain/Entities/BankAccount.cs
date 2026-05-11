@@ -11,7 +11,6 @@ namespace BlueBerryFinance.API.Domain.Entities
         public Bank Bank { get; set; }
         public Country Country { get; set; }
         public decimal Balance { get; set; }
-
         public User User { get; set; } = null!;
         public Currency Currency { get; set; } = null!;
 

@@ -7,8 +7,18 @@ namespace BlueBerryFinance.API.Data.Context
     {
         public AuditDbContext CreateDbContext(string[] args)
         {
+            var configuration = new ConfigurationBuilder()
+               .SetBasePath(Directory.GetCurrentDirectory())
+               .AddJsonFile("appsettings.json", optional: false)
+               .AddJsonFile("appsettings.Development.json", optional: true)
+               .AddEnvironmentVariables()
+               .Build();
+
+            var connectionString = configuration.GetConnectionString("AuditDb")
+                ?? throw new InvalidOperationException("Connection string 'Default' not found.");
+
             var options = new DbContextOptionsBuilder<AuditDbContext>()
-                .UseNpgsql("Host=localhost;Database=blueberry_audit;Username=blueberry;Password=ChangeMe123!")
+                .UseNpgsql(connectionString)
                 .Options;
 
             return new AuditDbContext(options);

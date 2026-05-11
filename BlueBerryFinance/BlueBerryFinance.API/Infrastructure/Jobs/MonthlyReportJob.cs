@@ -2,9 +2,6 @@ using BlueBerryFinance.API.Infrastructure.Messaging;
 
 namespace BlueBerryFinance.API.Infrastructure.Jobs
 {
-    /// <summary>
-    /// On the 1st of each month publishes a monthly-report generation job for every active user.
-    /// </summary>
     public class MonthlyReportJob : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;

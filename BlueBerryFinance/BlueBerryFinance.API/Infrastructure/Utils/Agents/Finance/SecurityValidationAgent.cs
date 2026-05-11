@@ -6,10 +6,6 @@ using BlueBerryFinance.API.Infrastructure.Utils.Helpers.Interfaces;
 
 namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Finance
 {
-    /// <summary>
-    /// Validates the security of proposed write operations.
-    /// Uses DB Query Tool (read tools) to verify ownership and detect anomalies.
-    /// </summary>
     public class SecurityValidationAgent : AgentBase<SecurityValidationResult>, ISecurityValidationAgent
     {
         public SecurityValidationAgent(

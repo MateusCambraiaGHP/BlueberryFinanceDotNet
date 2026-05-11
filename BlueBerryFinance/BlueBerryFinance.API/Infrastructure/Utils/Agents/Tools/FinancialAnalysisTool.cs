@@ -8,12 +8,6 @@ using System.Text.Json;
 
 namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
 {
-    /// <summary>
-    /// Financial Analysis Tool.
-    /// Extends AgentBase so it runs the full agentic loop:
-    /// DB Query Tool (AgentReadTools) retrieves data, then LLM analyzes and returns structured insights.
-    /// Usable both as an AITool (for the orchestrator) and as a direct service (for TransactionsHandler).
-    /// </summary>
     public class FinancialAnalysisTool : AgentBase<FinancialAnalysisResponse>, IFinancialAnalysisTool
     {
         public FinancialAnalysisTool(

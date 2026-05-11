@@ -154,10 +154,8 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
             _db.FiscalNotes.Add(fiscalNote);
             await _db.SaveChangesAsync();
 
-            // Step 4: Resolve currency, category and store from extracted data
             var now = DateTime.UtcNow;
 
-            // Currency: match by code or symbol from receipt, fall back to account currency
             Guid currencyId = account.CurrencyId;
             if (!string.IsNullOrWhiteSpace(receiptData.Currency))
             {
@@ -167,14 +165,12 @@ namespace BlueBerryFinance.API.Infrastructure.Utils.Agents.Tools
                 if (currency is not null) currencyId = currency.Id;
             }
 
-            // Category: best match expense category
             var category = await _db.Categories.FirstOrDefaultAsync(c => c.Type == "Expense")
                         ?? await _db.Categories.FirstOrDefaultAsync();
             if (category is null)
                 return "No categories found. Please create at least one category first.";
             var categoryId = category.Id;
 
-            // Store: look up or create from receipt shop name
             var shopName = receiptData.ShopName ?? "Unknown Store";
             var store = await _db.Stores.FirstOrDefaultAsync(s =>
                 s.Name.ToLower() == shopName.ToLower());

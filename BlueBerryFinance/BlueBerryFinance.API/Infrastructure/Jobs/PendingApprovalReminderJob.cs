@@ -4,9 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlueBerryFinance.API.Infrastructure.Jobs
 {
-    /// <summary>
-    /// Every 4 hours: publishes a notification for each user that has pending agent approvals.
-    /// </summary>
     public class PendingApprovalReminderJob : BackgroundService
     {
         private static readonly TimeSpan _interval = TimeSpan.FromHours(4);
@@ -26,7 +23,6 @@ namespace BlueBerryFinance.API.Infrastructure.Jobs
         {
             _logger.LogInformation("PendingApprovalReminderJob started");
 
-            // Initial delay — let everything warm up first
             await Task.Delay(TimeSpan.FromMinutes(2), stoppingToken);
 
             while (!stoppingToken.IsCancellationRequested)

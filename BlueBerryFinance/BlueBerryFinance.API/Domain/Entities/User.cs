@@ -7,7 +7,7 @@ namespace BlueBerryFinance.API.Domain.Entities
         public string Email { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
-        public string Profile { get; set; } = "User"; // Admin | User
+        public string Profile { get; set; } = "User"; 
 
         public User() { }
     }

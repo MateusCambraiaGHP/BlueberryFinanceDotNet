@@ -9,7 +9,7 @@ namespace BlueBerryFinance.API.Domain.Entities
         public Guid? TransactionId { get; set; }
         public string ImageUrl { get; set; } = string.Empty;
         public string RawText { get; set; } = string.Empty;
-        public string ExtractedData { get; set; } = "{}"; // JSON
+        public string ExtractedData { get; set; } = "{}";
         public FiscalNoteStatus Status { get; set; } = FiscalNoteStatus.Pending;
 
         public User User { get; set; } = null!;
