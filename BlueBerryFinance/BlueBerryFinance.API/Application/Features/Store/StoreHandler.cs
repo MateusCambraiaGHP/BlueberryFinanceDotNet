@@ -1,4 +1,3 @@
-using BlueBerryFinance.API.Application.Features.Store;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.Common.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -14,10 +13,15 @@ namespace BlueBerryFinance.API.Application.Features.Store
             _db = db;
         }
 
-        public async Task<IReadOnlyList<StoreViewModel>> ListAsync(CancellationToken ct = default)
+        public async Task<IReadOnlyList<StoreViewModel>> GetAsync(
+            StoreFilterRequest filter, CancellationToken ct = default)
         {
-            return await _db.Stores
-                .AsNoTracking()
+            var query = _db.Stores.AsNoTracking();
+
+            if (filter.Id.HasValue)
+                query = query.Where(s => s.Id == filter.Id.Value);
+
+            return await query
                 .Select(s => new StoreViewModel
                 {
                     Id = s.Id,
@@ -27,22 +31,6 @@ namespace BlueBerryFinance.API.Application.Features.Store
                     Active = s.Active == 1
                 })
                 .ToListAsync(ct);
-        }
-
-        public async Task<StoreViewModel?> GetByIdAsync(Guid id, CancellationToken ct = default)
-        {
-            return await _db.Stores
-                .AsNoTracking()
-                .Where(s => s.Id == id)
-                .Select(s => new StoreViewModel
-                {
-                    Id = s.Id,
-                    Name = s.Name,
-                    CategoryId = s.CategoryId,
-                    CategoryName = s.Category.Name,
-                    Active = s.Active == 1
-                })
-                .FirstOrDefaultAsync(ct);
         }
 
         public async Task<StoreViewModel> RegisterAsync(RegisterStoreRequest request, CancellationToken ct = default)
@@ -68,7 +56,7 @@ namespace BlueBerryFinance.API.Application.Features.Store
                 throw new InvalidOperationException("Failed to register store.", ex);
             }
 
-            return (await GetByIdAsync(entity.Id, ct))!;
+            return (await GetAsync(new StoreFilterRequest { Id = entity.Id }, ct)).First();
         }
 
         public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
