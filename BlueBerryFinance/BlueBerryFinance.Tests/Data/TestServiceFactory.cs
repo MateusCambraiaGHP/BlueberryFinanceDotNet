@@ -1,5 +1,8 @@
-using BlueBerryFinance.API.Application.Handlers;
-using BlueBerryFinance.API.Application.Handlers.Interfaces;
+using BlueBerryFinance.API.Application.Features.BankAccount;
+using BlueBerryFinance.API.Application.Features.Category;
+using BlueBerryFinance.API.Application.Features.FixedExpense;
+using BlueBerryFinance.API.Application.Features.Store;
+using BlueBerryFinance.API.Application.Features.Transaction;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.API.Infrastructure.Models;
 using BlueBerryFinance.API.Infrastructure.Services;
@@ -37,7 +40,6 @@ namespace BlueBerryFinance.Tests.Data
             services.AddScoped<IJwtService, JwtService>();
 
             // Handlers
-            services.AddScoped<IAuthHandler, AuthHandler>();
             services.AddScoped<ITransactionHandler, TransactionHandler>();
             services.AddScoped<IBankAccountHandler, BankAccountHandler>();
             services.AddScoped<ICategoryHandler, CategoryHandler>();

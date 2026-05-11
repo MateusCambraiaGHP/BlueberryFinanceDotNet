@@ -1,5 +1,4 @@
-using BlueBerryFinance.API.Application.Handlers;
-using BlueBerryFinance.API.Application.Requests.Transaction;
+using BlueBerryFinance.API.Application.Features.Transaction;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.API.Data.Entities;
 using BlueBerryFinance.API.Data.Entities.Enums;
@@ -41,7 +40,7 @@ namespace BlueBerryFinance.Tests.API.Handlers
                 CurrencyId = currency.Id,
                 Name = "Checking",
                 Bank = Bank.ActivoBank,
-                Country = Country.PT,
+                Country = Country.Portugal,
                 Balance = 1000m,
                 Active = 1
             };

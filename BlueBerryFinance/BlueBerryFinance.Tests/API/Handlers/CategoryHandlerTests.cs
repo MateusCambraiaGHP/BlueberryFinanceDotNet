@@ -1,5 +1,4 @@
-using BlueBerryFinance.API.Application.Handlers;
-using BlueBerryFinance.API.Application.Requests.Category;
+using BlueBerryFinance.API.Application.Features.Category;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.API.Data.Entities;
 using BlueBerryFinance.Tests.Data;
