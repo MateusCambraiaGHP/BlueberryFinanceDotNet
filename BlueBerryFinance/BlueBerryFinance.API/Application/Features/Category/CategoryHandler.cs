@@ -1,4 +1,3 @@
-using BlueBerryFinance.API.Application.Features.Category;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.Common.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -14,10 +13,15 @@ namespace BlueBerryFinance.API.Application.Features.Category
             _db = db;
         }
 
-        public async Task<IReadOnlyList<CategoryViewModel>> ListAsync(CancellationToken ct = default)
+        public async Task<IReadOnlyList<CategoryViewModel>> GetAsync(
+            CategoryFilterRequest filter, CancellationToken ct = default)
         {
-            return await _db.Categories
-                .AsNoTracking()
+            var query = _db.Categories.AsNoTracking();
+
+            if (filter.Id.HasValue)
+                query = query.Where(c => c.Id == filter.Id.Value);
+
+            return await query
                 .Select(c => new CategoryViewModel
                 {
                     Id = c.Id,
@@ -28,23 +32,6 @@ namespace BlueBerryFinance.API.Application.Features.Category
                     Active = c.Active == 1
                 })
                 .ToListAsync(ct);
-        }
-
-        public async Task<CategoryViewModel?> GetByIdAsync(Guid id, CancellationToken ct = default)
-        {
-            return await _db.Categories
-                .AsNoTracking()
-                .Where(c => c.Id == id)
-                .Select(c => new CategoryViewModel
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    Icon = c.Icon,
-                    Color = c.Color,
-                    Type = c.Type,
-                    Active = c.Active == 1
-                })
-                .FirstOrDefaultAsync(ct);
         }
 
         public async Task<CategoryViewModel> RegisterAsync(RegisterCategoryRequest request, CancellationToken ct = default)
@@ -72,7 +59,7 @@ namespace BlueBerryFinance.API.Application.Features.Category
                 throw new InvalidOperationException("Failed to register category.", ex);
             }
 
-            return (await GetByIdAsync(entity.Id, ct))!;
+            return (await GetAsync(new CategoryFilterRequest { Id = entity.Id }, ct)).First();
         }
 
         public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
