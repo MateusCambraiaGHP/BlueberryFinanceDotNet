@@ -1,5 +1,4 @@
-using BlueBerryFinance.API.Application.Handlers.Interfaces;
-using BlueBerryFinance.API.Application.Requests.Store;
+using BlueBerryFinance.API.Application.Features.Store;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

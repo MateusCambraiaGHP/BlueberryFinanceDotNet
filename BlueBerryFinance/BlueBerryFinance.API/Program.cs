@@ -1,5 +1,13 @@
-using BlueBerryFinance.API.Application.Handlers;
-using BlueBerryFinance.API.Application.Handlers.Interfaces;
+using BlueBerryFinance.API.Application.Features.AgentApproval;
+using BlueBerryFinance.API.Application.Features.BankAccount;
+using BlueBerryFinance.API.Application.Features.BankImport;
+using BlueBerryFinance.API.Application.Features.Category;
+using BlueBerryFinance.API.Application.Features.Chat;
+using BlueBerryFinance.API.Application.Features.Currency;
+using BlueBerryFinance.API.Application.Features.FixedExpense;
+using BlueBerryFinance.API.Application.Features.Report;
+using BlueBerryFinance.API.Application.Features.Store;
+using BlueBerryFinance.API.Application.Features.Transaction;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.API.Data.Entities;
 using BlueBerryFinance.API.Infrastructure.Jobs;

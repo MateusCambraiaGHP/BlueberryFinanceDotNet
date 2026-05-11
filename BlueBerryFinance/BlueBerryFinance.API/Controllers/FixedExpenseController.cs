@@ -1,5 +1,4 @@
-using BlueBerryFinance.API.Application.Handlers.Interfaces;
-using BlueBerryFinance.API.Application.Requests.FixedExpense;
+using BlueBerryFinance.API.Application.Features.FixedExpense;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

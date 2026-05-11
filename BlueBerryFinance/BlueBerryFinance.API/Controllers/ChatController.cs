@@ -1,5 +1,4 @@
-using BlueBerryFinance.API.Application.Handlers.Interfaces;
-using BlueBerryFinance.API.Application.Requests;
+using BlueBerryFinance.API.Application.Features.Chat;
 using BlueBerryFinance.API.Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -62,7 +61,7 @@ namespace BlueBerryFinance.API.Controllers
         }
 
         [HttpPost("chat/stream")]
-        public async Task StreamChat([FromBody] FinancialAnalysisRequest request, CancellationToken ct)
+        public async Task StreamChat([FromBody] ChatStreamRequest request, CancellationToken ct)
         {
             Response.Headers["Content-Type"] = "text/event-stream";
             Response.Headers["Cache-Control"] = "no-cache";
