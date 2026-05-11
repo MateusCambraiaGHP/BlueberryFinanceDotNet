@@ -1,4 +1,3 @@
-using BlueBerryFinance.API.Application.Features.FixedExpense;
 using BlueBerryFinance.API.Data.Context;
 using BlueBerryFinance.Common.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -14,11 +13,17 @@ namespace BlueBerryFinance.API.Application.Features.FixedExpense
             _db = db;
         }
 
-        public async Task<IReadOnlyList<FixedExpenseViewModel>> ListAsync(Guid userId, CancellationToken ct = default)
+        public async Task<IReadOnlyList<FixedExpenseViewModel>> GetAsync(
+            FixedExpenseFilterRequest filter, Guid userId, CancellationToken ct = default)
         {
-            return await _db.FixedExpenses
+            var query = _db.FixedExpenses
                 .AsNoTracking()
-                .Where(f => f.UserId == userId)
+                .Where(f => f.UserId == userId);
+
+            if (filter.Id.HasValue)
+                query = query.Where(f => f.Id == filter.Id.Value);
+
+            return await query
                 .Select(f => new FixedExpenseViewModel
                 {
                     Id = f.Id,
@@ -34,28 +39,6 @@ namespace BlueBerryFinance.API.Application.Features.FixedExpense
                     Active = f.Active == 1
                 })
                 .ToListAsync(ct);
-        }
-
-        public async Task<FixedExpenseViewModel?> GetByIdAsync(Guid id, Guid userId, CancellationToken ct = default)
-        {
-            return await _db.FixedExpenses
-                .AsNoTracking()
-                .Where(f => f.Id == id && f.UserId == userId)
-                .Select(f => new FixedExpenseViewModel
-                {
-                    Id = f.Id,
-                    UserId = f.UserId,
-                    Name = f.Name,
-                    Description = f.Description,
-                    Amount = f.Amount,
-                    CurrencyCode = f.Currency.Code.ToString(),
-                    CurrencySymbol = f.Currency.Symbol,
-                    DayOfMonth = f.DayOfMonth,
-                    IsRecurring = f.IsRecurring,
-                    StoreName = f.Store.Name,
-                    Active = f.Active == 1
-                })
-                .FirstOrDefaultAsync(ct);
         }
 
         public async Task<FixedExpenseViewModel> RegisterAsync(RegisterFixedExpenseRequest request, Guid userId, CancellationToken ct = default)
@@ -87,7 +70,7 @@ namespace BlueBerryFinance.API.Application.Features.FixedExpense
                 throw new InvalidOperationException("Failed to register fixed expense.", ex);
             }
 
-            return (await GetByIdAsync(entity.Id, userId, ct))!;
+            return (await GetAsync(new FixedExpenseFilterRequest { Id = entity.Id }, userId, ct)).First();
         }
 
         public async Task<bool> DeleteAsync(Guid id, Guid userId, CancellationToken ct = default)
