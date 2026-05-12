@@ -2,9 +2,6 @@ using BlueberryFinance.Web.Services.Interfaces;
 
 namespace BlueberryFinance.Web.Services;
 
-// Scoped per Blazor circuit.
-// The API JWT is stored in the "api_jwt" HttpOnly cookie set by /account/login.
-// We read it from the cookie on every new circuit (SSR prerender has HttpContext).
 public class TokenService(IHttpContextAccessor httpContextAccessor) : ITokenService
 {
     private const string CookieName = "api_jwt";
